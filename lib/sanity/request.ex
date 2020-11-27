@@ -1,3 +1,3 @@
 defmodule Sanity.Request do
-  defstruct [:endpoint, :method, :params]
+  defstruct [:body, :endpoint, :method, :params]
 end

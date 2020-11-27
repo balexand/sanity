@@ -15,6 +15,36 @@ defmodule Sanity.MutateIntegrationTest do
     %{config: [dataset: "test", project_id: project_id, token: token]}
   end
 
+  test "mutate", %{config: _config} do
+    # FIXME
+    # {:ok, %Response{}} =
+    #   Sanity.mutate([
+    #     %{
+    #       create: %{
+    #         _type: "product",
+    #         title: "Test product"
+    #       }
+    #     }
+    #   ])
+    #   |> Sanity.request(config)
+    #   |> IO.inspect()
+
+    # {:ok, %Response{}} =
+    #   Sanity.mutate([
+    #     %{
+    #       patch: %{
+    #         id: "2vbsfK5j2KstKdRyBB8ae9",
+    #         ifRevisionID: "bo35MqpmFOvWQMRCPkokuZ",
+    #         set: %{
+    #           title: "Updated title 3"
+    #         }
+    #       }
+    #     }
+    #   ])
+    #   |> Sanity.request(config)
+    #   |> IO.inspect()
+  end
+
   test "query", %{config: config} do
     assert {:ok, %Response{body: %{"query" => "{\"hello\": \"world\"}", "result" => result}}} =
              Sanity.query(~S<{"hello": "world"}>)

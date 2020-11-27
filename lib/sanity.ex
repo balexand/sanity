@@ -3,14 +3,24 @@ defmodule Sanity do
 
   # FIXME review for consistency with Javascript client-lib
 
-  def query(query, variables \\ %{}, params \\ []) do
-    # FIXME don't allow params to include query or variable
+  def mutate(mutations, _query_params \\ []) when is_list(mutations) do
+    # FIXME support query params
+
+    %Request{
+      body: Jason.encode!(%{mutations: mutations}),
+      endpoint: :mutate,
+      method: :post
+    }
+  end
+
+  def query(query, variables \\ %{}, query_params \\ []) do
+    # FIXME don't allow query_params to include query or variable
 
     params =
       variables
       |> Enum.map(fn {k, v} -> {"$#{k}", Jason.encode!(v)} end)
       |> Map.new()
-      |> Map.merge(Map.new(params))
+      |> Map.merge(Map.new(query_params))
       |> Map.merge(%{query: query})
 
     %Request{
@@ -20,11 +30,14 @@ defmodule Sanity do
     }
   end
 
-  def request(%Request{method: method, params: params} = request, opts \\ []) do
+  def request(%Request{body: body, method: method, params: params} = request, opts \\ []) do
     case method do
       :get ->
         url = "#{url_for(request, opts)}?#{URI.encode_query(params)}"
-        Finch.build(method, url)
+        Finch.build(method, url, headers(opts))
+
+      method ->
+        Finch.build(method, url_for(request, opts), headers(opts), body)
     end
     |> Finch.request(Sanity.Finch)
     |> case do
@@ -44,6 +57,17 @@ defmodule Sanity do
     # FIXME support cdn
     project_id = Keyword.fetch!(opts, :project_id)
     "https://#{project_id}.api.sanity.io"
+  end
+
+  defp headers(opts) do
+    case Keyword.fetch(opts, :token) do
+      {:ok, token} -> [{"authorization", "Bearer #{token}"}]
+      :error -> []
+    end
+  end
+
+  defp url_for(%Request{endpoint: :mutate}, opts) do
+    "#{base_url(opts)}/v1/data/mutate/#{Keyword.fetch!(opts, :dataset)}"
   end
 
   defp url_for(%Request{endpoint: :query}, opts) do
