@@ -16,20 +16,27 @@ defmodule Sanity.MutateIntegrationTest do
   end
 
   test "query", %{config: config} do
-    assert %Response{body: %{"query" => "{\"hello\": \"world\"}", "result" => result}} =
+    assert {:ok, %Response{body: %{"query" => "{\"hello\": \"world\"}", "result" => result}}} =
              Sanity.query(~S<{"hello": "world"}>)
-             |> Sanity.request!(config)
+             |> Sanity.request(config)
 
     assert result == %{"hello" => "world"}
 
-    assert %Response{body: %{"query" => "{\"hello\": $my_var}", "result" => result}} =
+    assert {:ok, %Response{body: %{"query" => "{\"hello\": $my_var}", "result" => result}}} =
              Sanity.query(~S<{"hello": $my_var}>, %{my_var: "x"})
-             |> Sanity.request!(config)
+             |> Sanity.request(config)
 
     assert result == %{"hello" => "x"}
 
-    assert %Response{body: %{"explain" => <<_::binary>>}} =
+    assert {:ok, %Response{body: %{"explain" => <<_::binary>>}}} =
              Sanity.query(~S<{"hello": "world"}>, %{}, explain: true)
-             |> Sanity.request!(config)
+             |> Sanity.request(config)
+
+    assert {:error,
+            %Response{
+              body: %{"error" => %{"description" => "Param $my_var referenced, but not provided"}}
+            }} =
+             Sanity.query(~S<{"hello": $my_var}>)
+             |> Sanity.request(config)
   end
 end
