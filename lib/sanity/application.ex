@@ -8,8 +8,7 @@ defmodule Sanity.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: Sanity.Worker.start_link(arg)
-      # {Sanity.Worker, arg}
+      {Finch, name: Sanity.Finch}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

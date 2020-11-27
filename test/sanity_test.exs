@@ -1,8 +1,4 @@
 defmodule SanityTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Sanity
-
-  test "greets the world" do
-    assert Sanity.hello() == :world
-  end
 end
