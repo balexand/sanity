@@ -3,6 +3,8 @@ defmodule Sanity.MutateIntegrationTest do
 
   alias Sanity.Response
 
+  @moduletag :integration
+
   setup do
     project_id =
       System.get_env("ELIXIR_SANITY_TEST_PROJECT_ID") ||
