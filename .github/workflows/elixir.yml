@@ -1,0 +1,28 @@
+name: Elixir CI
+
+on: push
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Elixir
+        uses: actions/setup-elixir@v1
+        with:
+          elixir-version: "1.11.2"
+          otp-version: "23.1.2"
+      - name: Install dependencies
+        run: mix deps.get
+      - name: Run tests
+        run: mix test
+      - name: Run integration tests
+        env:
+          ELIXIR_SANITY_TEST_PROJECT_ID: ${{ secrets.ELIXIR_SANITY_TEST_PROJECT_ID }}
+          ELIXIR_SANITY_TEST_TOKEN: ${{ secrets.ELIXIR_SANITY_TEST_TOKEN }}
+        if: env.ELIXIR_SANITY_TEST_TOKEN
+        run: mix test --only integration
+      - name: Check format
+        run: mix format --check-formatted
