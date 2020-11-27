@@ -21,6 +21,7 @@ jobs:
       - name: Run integration tests
         env:
           ELIXIR_SANITY_TEST_TOKEN: ${{ secrets.ELIXIR_SANITY_TEST_TOKEN }}
+        if: env.ELIXIR_SANITY_TEST_TOKEN
         run: mix test --only integration
       - name: Check format
         run: mix format --check-formatted
