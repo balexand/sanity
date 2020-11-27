@@ -33,6 +33,7 @@ defmodule Sanity do
         %Request{body: body, method: method, query_params: query_params} = request,
         opts \\ []
       ) do
+    # TODO support client opts, like :receive_timeout
     url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
 
     Finch.build(method, url, headers(opts), body)
