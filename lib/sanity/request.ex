@@ -1,3 +1,3 @@
 defmodule Sanity.Request do
-  defstruct [:body, :endpoint, :method, :params]
+  defstruct body: nil, endpoint: nil, method: nil, query_params: %{}
 end

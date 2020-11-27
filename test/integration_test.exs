@@ -19,16 +19,22 @@ defmodule Sanity.MutateIntegrationTest do
 
   test "mutate", %{config: config} do
     # FIXME
-    {:ok, %Response{}} =
-      Sanity.mutate([
-        %{
-          create: %{
-            _type: "product",
-            title: "Test product"
-          }
-        }
-      ])
-      |> Sanity.request(config)
+    assert {:ok,
+            %Response{
+              body: %{"results" => [%{"id" => _, "operation" => "create"}], "transactionId" => _}
+            }} =
+             Sanity.mutate(
+               [
+                 %{
+                   create: %{
+                     _type: "product",
+                     title: "Test product"
+                   }
+                 }
+               ],
+               returnIds: true
+             )
+             |> Sanity.request(config)
 
     # {:ok, %Response{}} =
     #   Sanity.mutate([

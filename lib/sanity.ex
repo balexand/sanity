@@ -3,20 +3,19 @@ defmodule Sanity do
 
   # FIXME review for consistency with Javascript client-lib
 
-  def mutate(mutations, _query_params \\ []) when is_list(mutations) do
-    # FIXME support query params
-
+  def mutate(mutations, query_params \\ []) when is_list(mutations) do
     %Request{
       body: Jason.encode!(%{mutations: mutations}),
       endpoint: :mutate,
-      method: :post
+      method: :post,
+      query_params: query_params
     }
   end
 
   def query(query, variables \\ %{}, query_params \\ []) do
     # FIXME don't allow query_params to include query or variable
 
-    params =
+    query_params =
       variables
       |> Enum.map(fn {k, v} -> {"$#{k}", Jason.encode!(v)} end)
       |> Map.new()
@@ -26,19 +25,17 @@ defmodule Sanity do
     %Request{
       endpoint: :query,
       method: :get,
-      params: params
+      query_params: query_params
     }
   end
 
-  def request(%Request{body: body, method: method, params: params} = request, opts \\ []) do
-    case method do
-      :get ->
-        url = "#{url_for(request, opts)}?#{URI.encode_query(params)}"
-        Finch.build(method, url, headers(opts))
+  def request(
+        %Request{body: body, method: method, query_params: query_params} = request,
+        opts \\ []
+      ) do
+    url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
 
-      method ->
-        Finch.build(method, url_for(request, opts), headers(opts), body)
-    end
+    Finch.build(method, url, headers(opts), body)
     |> Finch.request(Sanity.Finch)
     |> case do
       {:ok, %Finch.Response{body: body, headers: headers, status: status}}
