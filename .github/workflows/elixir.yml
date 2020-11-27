@@ -18,5 +18,8 @@ jobs:
         run: mix deps.get
       - name: Run tests
         run: mix test
+      - name: Run integration tests
+        if: env.ELIXIR_SANITY_TEST_TOKEN
+        run: mix test --only integration
       - name: Check format
         run: mix format --check-formatted
