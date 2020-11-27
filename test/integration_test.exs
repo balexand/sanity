@@ -1,5 +1,5 @@
 defmodule Sanity.MutateIntegrationTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Sanity.Response
 
