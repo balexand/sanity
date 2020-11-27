@@ -17,19 +17,18 @@ defmodule Sanity.MutateIntegrationTest do
     %{config: [dataset: "test", project_id: project_id, token: token]}
   end
 
-  test "mutate", %{config: _config} do
+  test "mutate", %{config: config} do
     # FIXME
-    # {:ok, %Response{}} =
-    #   Sanity.mutate([
-    #     %{
-    #       create: %{
-    #         _type: "product",
-    #         title: "Test product"
-    #       }
-    #     }
-    #   ])
-    #   |> Sanity.request(config)
-    #   |> IO.inspect()
+    {:ok, %Response{}} =
+      Sanity.mutate([
+        %{
+          create: %{
+            _type: "product",
+            title: "Test product"
+          }
+        }
+      ])
+      |> Sanity.request(config)
 
     # {:ok, %Response{}} =
     #   Sanity.mutate([
