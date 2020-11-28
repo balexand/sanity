@@ -18,7 +18,8 @@ defmodule Sanity.MutateIntegrationTest do
   end
 
   test "mutate", %{config: config} do
-    # FIXME
+    # FIXME implement more tests
+    # FIXME cleanup created documents
     assert {:ok,
             %Response{
               body: %{"results" => [%{"id" => _, "operation" => "create"}], "transactionId" => _}
