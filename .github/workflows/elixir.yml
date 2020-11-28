@@ -7,13 +7,18 @@ jobs:
     name: Build and test
     runs-on: ubuntu-18.04
 
+    strategy:
+      matrix:
+        elixir-version: ["1.8", "1.9", "1.10", "1.11"]
+        otp-version: ["21", "22", "23"]
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up Elixir
         uses: actions/setup-elixir@v1
         with:
-          elixir-version: "1.11.2"
-          otp-version: "23.1.2"
+          elixir-version: ${{ matrix.elixir-version }}
+          otp-version: ${{ matrix.otp-version }}
       - name: Install dependencies
         run: mix deps.get
       - name: Run tests
