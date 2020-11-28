@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        elixir-version: ["1.11.2"]
+        elixir-version: ["1.11"]
 
     steps:
       - uses: actions/checkout@v2
