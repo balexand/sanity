@@ -5,7 +5,7 @@ defmodule Sanity.MutateIntegrationTest do
 
   @moduletag :integration
 
-  setup do
+  setup_all do
     project_id =
       System.get_env("ELIXIR_SANITY_TEST_PROJECT_ID") ||
         raise "ELIXIR_SANITY_TEST_PROJECT_ID env var must be set"
@@ -14,15 +14,20 @@ defmodule Sanity.MutateIntegrationTest do
       System.get_env("ELIXIR_SANITY_TEST_TOKEN") ||
         raise "ELIXIR_SANITY_TEST_TOKEN env var must be set"
 
-    %{config: [dataset: "test", project_id: project_id, token: token]}
+    config = [dataset: "test", project_id: project_id, token: token]
+
+    Sanity.mutate([
+      %{delete: %{query: ~S<*[_type in ["sanity.imageAsset", "product"]]>}}
+    ])
+    |> Sanity.request(config)
+
+    %{config: config}
   end
 
   test "mutate", %{config: config} do
-    # FIXME implement more tests
-    # FIXME cleanup created documents
     assert {:ok,
             %Response{
-              body: %{"results" => [%{"id" => _, "operation" => "create"}], "transactionId" => _}
+              body: %{"results" => [%{"id" => id, "operation" => "create"}], "transactionId" => _}
             }} =
              Sanity.mutate(
                [
@@ -37,20 +42,39 @@ defmodule Sanity.MutateIntegrationTest do
              )
              |> Sanity.request(config)
 
-    # {:ok, %Response{}} =
-    #   Sanity.mutate([
-    #     %{
-    #       patch: %{
-    #         id: "2vbsfK5j2KstKdRyBB8ae9",
-    #         ifRevisionID: "bo35MqpmFOvWQMRCPkokuZ",
-    #         set: %{
-    #           title: "Updated title 3"
-    #         }
-    #       }
-    #     }
-    #   ])
-    #   |> Sanity.request(config)
-    #   |> IO.inspect()
+    assert {:ok,
+            %Response{body: %{"results" => [%{"document" => %{"title" => "Updated title"}}]}}} =
+             Sanity.mutate(
+               [
+                 %{
+                   patch: %{
+                     id: id,
+                     set: %{
+                       title: "Updated title"
+                     }
+                   }
+                 }
+               ],
+               # FIXME underscore case
+               returnDocuments: true
+             )
+             |> Sanity.request(config)
+
+    assert {:error, %Response{body: %{"error" => %{"description" => description}}}} =
+             Sanity.mutate([
+               %{
+                 patch: %{
+                   id: id,
+                   ifRevisionID: "xo35MqpmFOvWQMRCPkokuZ",
+                   set: %{
+                     title: "Updated title 2"
+                   }
+                 }
+               }
+             ])
+             |> Sanity.request(config)
+
+    assert description =~ "has unexpected revision ID"
   end
 
   test "query", %{config: config} do
