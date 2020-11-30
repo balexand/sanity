@@ -16,8 +16,13 @@ defmodule Sanity.MutateIntegrationTest do
 
     config = [dataset: "test", project_id: project_id, token: token]
 
+    recently = DateTime.utc_now() |> DateTime.add(-60, :second) |> DateTime.to_iso8601()
+
     Sanity.mutate([
-      %{delete: %{query: ~S<*[_type in ["sanity.imageAsset", "product"]]>}}
+      %{delete: %{query: ~s<*[
+          _type in ["sanity.imageAsset", "product"] &&
+          dateTime(_createdAt) < dateTime(#{recently})")
+        ]>}}
     ])
     |> Sanity.request(config)
 
