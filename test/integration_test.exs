@@ -38,7 +38,7 @@ defmodule Sanity.MutateIntegrationTest do
                    }
                  }
                ],
-               returnIds: true
+               return_ids: true
              )
              |> Sanity.request(config)
 
@@ -55,8 +55,7 @@ defmodule Sanity.MutateIntegrationTest do
                    }
                  }
                ],
-               # FIXME underscore case
-               returnDocuments: true
+               return_documents: true
              )
              |> Sanity.request(config)
 

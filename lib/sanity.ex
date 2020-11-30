@@ -8,19 +8,17 @@ defmodule Sanity do
       body: Jason.encode!(%{mutations: mutations}),
       endpoint: :mutate,
       method: :post,
-      query_params: query_params
+      query_params: camelize_params(query_params)
     }
   end
 
   def query(query, variables \\ %{}, query_params \\ []) do
-    # FIXME don't allow query_params to include query or variable
-
     query_params =
       variables
+      |> stringify_keys()
       |> Enum.map(fn {k, v} -> {"$#{k}", Jason.encode!(v)} end)
-      |> Map.new()
-      |> Map.merge(Map.new(query_params))
-      |> Map.merge(%{query: query})
+      |> Enum.into(camelize_params(query_params))
+      |> Map.put("query", query)
 
     %Request{
       endpoint: :query,
@@ -62,6 +60,25 @@ defmodule Sanity do
       {:ok, token} -> [{"authorization", "Bearer #{token}"}]
       :error -> []
     end
+  end
+
+  defp camelize_params(pairs) do
+    pairs
+    |> stringify_keys()
+    |> Enum.map(fn {k, v} ->
+      {first, rest} = k |> Macro.camelize() |> String.split_at(1)
+      {String.downcase(first) <> rest, v}
+    end)
+    |> Map.new()
+  end
+
+  defp stringify_keys(pairs) do
+    pairs
+    |> Enum.map(fn
+      {k, v} when is_binary(k) -> {k, v}
+      {k, v} when is_atom(k) -> {Atom.to_string(k), v}
+    end)
+    |> Map.new()
   end
 
   defp url_for(%Request{endpoint: :mutate}, opts) do
