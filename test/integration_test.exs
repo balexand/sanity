@@ -17,7 +17,10 @@ defmodule Sanity.MutateIntegrationTest do
     config = [dataset: "test", project_id: project_id, token: token]
 
     Sanity.mutate([
-      %{delete: %{query: ~S<*[_type in ["sanity.imageAsset", "product"]]>}}
+      %{delete: %{query: ~S'*[
+          _type in ["sanity.imageAsset", "product"] &&
+          dateTime(now()) - dateTime(_createdAt) > 60
+        ]'}}
     ])
     |> Sanity.request(config)
 
