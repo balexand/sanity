@@ -28,7 +28,8 @@ defmodule Sanity.MixProject do
   defp deps do
     [
       {:finch, "~> 0.5"},
-      {:jason, "~> 1.2"}
+      {:jason, "~> 1.2"},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 end
