@@ -1,8 +1,15 @@
 defmodule Sanity do
+  @moduledoc """
+  FIXME write moduledoc
+  """
+
   alias Sanity.{Request, Response}
 
   # FIXME review for consistency with Javascript client-lib
 
+  @doc """
+  FIXME write doc
+  """
   def mutate(mutations, query_params \\ []) when is_list(mutations) do
     %Request{
       body: Jason.encode!(%{mutations: mutations}),
@@ -12,6 +19,9 @@ defmodule Sanity do
     }
   end
 
+  @doc """
+  FIXME write doc
+  """
   def query(query, variables \\ %{}, query_params \\ []) do
     query_params =
       variables
@@ -53,7 +63,8 @@ defmodule Sanity do
   ]
 
   @doc """
-  Sends a request and returns a `Sanity.Response` struct.
+  Submits a request to the Sanity API. Use one of the other functions in this module to generate
+  the request struct.
 
   ## Options
 
