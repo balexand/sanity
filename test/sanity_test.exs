@@ -97,7 +97,7 @@ defmodule SanityTest do
     Mox.expect(MockFinch, :request, fn request, Sanity.Finch, [receive_timeout: 1] ->
       assert %Finch.Request{
                body: nil,
-               headers: [],
+               headers: [{"authorization", "Bearer supersecret"}],
                host: "projectx.api.sanity.io",
                method: "GET",
                path: "/v1/data/query/myset",
@@ -113,7 +113,8 @@ defmodule SanityTest do
       dataset: "myset",
       finch_mod: MockFinch,
       http_options: [receive_timeout: 1],
-      project_id: "projectx"
+      project_id: "projectx",
+      token: "supersecret"
     ]
 
     assert {:ok, %Response{body: %{}, headers: []}} ==
