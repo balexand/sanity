@@ -19,3 +19,13 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/sanity](https://hexdocs.pm/sanity).
 
+## Supported endpoints
+
+- [ ] Assets
+- [ ] Doc
+- [ ] Export
+- [ ] History
+- [ ] Listen
+- [x] Mutate
+- [ ] Projects
+- [x] Query
