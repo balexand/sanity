@@ -27,22 +27,47 @@ defmodule Sanity do
     }
   end
 
+  @request_options_schema [
+    dataset: [
+      type: :string,
+      doc: "Sanity dataset."
+    ],
+    finch_mod: [
+      type: :atom,
+      doc: false,
+      default: Finch
+    ],
+    http_options: [
+      type: :keyword_list,
+      doc: "Options to be passed to `Finch.request/3`.",
+      default: []
+    ],
+    project_id: [
+      type: :string,
+      doc: "Sanity project ID."
+    ],
+    token: [
+      type: :string,
+      doc: "Sanity auth token."
+    ]
+  ]
+
   @doc """
   Sends a request and returns a `Sanity.Response` struct.
 
   ## Options
 
-    * `dataset` - Sanity dataset
-    * `http_options` - Options to be passed to `Finch.request/3`
-    * `project_id` - Sanity project ID
+  #{NimbleOptions.docs(@request_options_schema)}
   """
   @spec request(Request.t(), keyword()) :: {:ok, Response.t()} | {:error, Response.t()}
   def request(
         %Request{body: body, method: method, query_params: query_params} = request,
         opts \\ []
       ) do
-    finch_mod = Keyword.get(opts, :finch_mod, Finch)
-    http_options = Keyword.get(opts, :http_options, [])
+    opts = NimbleOptions.validate!(opts, @request_options_schema)
+
+    finch_mod = Keyword.fetch!(opts, :finch_mod)
+    http_options = Keyword.fetch!(opts, :http_options)
 
     url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
 
@@ -63,8 +88,7 @@ defmodule Sanity do
 
   defp base_url(opts) do
     # FIXME support cdn
-    project_id = Keyword.fetch!(opts, :project_id)
-    "https://#{project_id}.api.sanity.io"
+    "https://#{request_opt!(opts, :project_id)}.api.sanity.io"
   end
 
   defp headers(opts) do
@@ -94,10 +118,17 @@ defmodule Sanity do
   end
 
   defp url_for(%Request{endpoint: :mutate}, opts) do
-    "#{base_url(opts)}/v1/data/mutate/#{Keyword.fetch!(opts, :dataset)}"
+    "#{base_url(opts)}/v1/data/mutate/#{request_opt!(opts, :dataset)}"
   end
 
   defp url_for(%Request{endpoint: :query}, opts) do
-    "#{base_url(opts)}/v1/data/query/#{Keyword.fetch!(opts, :dataset)}"
+    "#{base_url(opts)}/v1/data/query/#{request_opt!(opts, :dataset)}"
+  end
+
+  defp request_opt!(opts, key) do
+    schema = Keyword.update!(@request_options_schema, key, &Keyword.put(&1, :required, true))
+    NimbleOptions.validate!(opts, schema)
+
+    Keyword.fetch!(opts, key)
   end
 end

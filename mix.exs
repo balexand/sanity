@@ -38,6 +38,7 @@ defmodule Sanity.MixProject do
     [
       {:finch, "~> 0.5"},
       {:jason, "~> 1.2"},
+      {:nimble_options, "~> 0.3.5"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:mox, ">= 1.0.0", only: :test}
     ]

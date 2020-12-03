@@ -6,6 +6,15 @@ defmodule SanityTest do
   setup :verify_on_exit!
 
   alias Sanity.{MockFinch, Request, Response}
+  alias NimbleOptions.ValidationError
+
+  @request_config [
+    dataset: "myset",
+    finch_mod: MockFinch,
+    http_options: [receive_timeout: 1],
+    project_id: "projectx",
+    token: "supersecret"
+  ]
 
   test "mutate" do
     assert %Request{
@@ -93,32 +102,48 @@ defmodule SanityTest do
     end
   end
 
-  test "request" do
-    Mox.expect(MockFinch, :request, fn request, Sanity.Finch, [receive_timeout: 1] ->
-      assert %Finch.Request{
-               body: nil,
-               headers: [{"authorization", "Bearer supersecret"}],
-               host: "projectx.api.sanity.io",
-               method: "GET",
-               path: "/v1/data/query/myset",
-               port: 443,
-               query: "%24var_2=%22y%22&query=%2A",
-               scheme: :https
-             } == request
+  describe "request" do
+    test "with query" do
+      Mox.expect(MockFinch, :request, fn request, Sanity.Finch, [receive_timeout: 1] ->
+        assert %Finch.Request{
+                 body: nil,
+                 headers: [{"authorization", "Bearer supersecret"}],
+                 host: "projectx.api.sanity.io",
+                 method: "GET",
+                 path: "/v1/data/query/myset",
+                 port: 443,
+                 query: "%24var_2=%22y%22&query=%2A",
+                 scheme: :https
+               } == request
 
-      {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
-    end)
+        {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
+      end)
 
-    config = [
-      dataset: "myset",
-      finch_mod: MockFinch,
-      http_options: [receive_timeout: 1],
-      project_id: "projectx",
-      token: "supersecret"
-    ]
+      assert {:ok, %Response{body: %{}, headers: []}} ==
+               Sanity.query("*", var_2: "y")
+               |> Sanity.request(@request_config)
+    end
 
-    assert {:ok, %Response{body: %{}, headers: []}} ==
-             Sanity.query("*", var_2: "y")
-             |> Sanity.request(config)
+    test "options validations" do
+      query = Sanity.query("*")
+
+      assert_raise ValidationError, "expected :dataset to be a string, got: :ok", fn ->
+        Sanity.request(query, dataset: :ok)
+      end
+
+      assert_raise ValidationError, "expected :http_options to be a keyword list, got: %{}", fn ->
+        Sanity.request(query, http_options: %{})
+      end
+
+      assert_raise ValidationError, "expected :project_id to be a string, got: 1", fn ->
+        Sanity.request(query, project_id: 1)
+      end
+
+      assert_raise ValidationError,
+                   "required option :dataset not found, received options: [:finch_mod, :http_options, :project_id, :token]",
+                   fn ->
+                     Sanity.request(query, Keyword.delete(@request_config, :dataset))
+                   end
+    end
   end
 end
