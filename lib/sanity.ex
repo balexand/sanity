@@ -27,15 +27,27 @@ defmodule Sanity do
     }
   end
 
+  @doc """
+  Sends a request and returns a `Sanity.Response` struct.
+
+  ## Options
+
+    * `dataset` - Sanity dataset
+    * `http_options` - Options to be passed to `Finch.request/3`
+    * `project_id` - Sanity project ID
+  """
+  @spec request(Request.t(), keyword()) :: {:ok, Response.t()} | {:error, Response.t()}
   def request(
         %Request{body: body, method: method, query_params: query_params} = request,
         opts \\ []
       ) do
-    # TODO support client opts, like :receive_timeout
+    finch_mod = Keyword.get(opts, :finch_mod, Finch)
+    http_options = Keyword.get(opts, :http_options, [])
+
     url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
 
     Finch.build(method, url, headers(opts), body)
-    |> Finch.request(Sanity.Finch)
+    |> finch_mod.request(Sanity.Finch, http_options)
     |> case do
       {:ok, %Finch.Response{body: body, headers: headers, status: status}}
       when status in 200..299 ->

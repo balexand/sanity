@@ -2,7 +2,10 @@ defmodule SanityTest do
   use ExUnit.Case, async: true
   doctest Sanity
 
-  alias Sanity.Request
+  import Mox
+  setup :verify_on_exit!
+
+  alias Sanity.{MockFinch, Request, Response}
 
   test "mutate" do
     assert %Request{
@@ -88,5 +91,33 @@ defmodule SanityTest do
         Sanity.query("*", %{}, %{2 => false})
       end
     end
+  end
+
+  test "request" do
+    Mox.expect(MockFinch, :request, fn request, Sanity.Finch, [receive_timeout: 1] ->
+      assert %Finch.Request{
+               body: nil,
+               headers: [],
+               host: "projectx.api.sanity.io",
+               method: "GET",
+               path: "/v1/data/query/myset",
+               port: 443,
+               query: "%24var_2=%22y%22&query=%2A",
+               scheme: :https
+             } == request
+
+      {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
+    end)
+
+    config = [
+      dataset: "myset",
+      finch_mod: MockFinch,
+      http_options: [receive_timeout: 1],
+      project_id: "projectx"
+    ]
+
+    assert {:ok, %Response{body: %{}, headers: []}} ==
+             Sanity.query("*", var_2: "y")
+             |> Sanity.request(config)
   end
 end
