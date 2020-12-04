@@ -27,6 +27,33 @@ defmodule Sanity.MutateIntegrationTest do
     %{config: config}
   end
 
+  test "doc, get_document, and get_documents", %{config: config} do
+    {:ok, %Response{body: %{"results" => [%{"id" => id}]}}} =
+      Sanity.mutate(
+        [
+          %{create: %{_type: "product", title: "product x"}}
+        ],
+        return_ids: true
+      )
+      |> Sanity.request(config)
+
+    assert {:ok, %Response{body: %{"documents" => [%{"title" => "product x"}]}}} =
+             Sanity.doc(id) |> Sanity.request(config)
+
+    assert %{"_id" => ^id, "title" => "product x"} = Sanity.get_document(id, config)
+    assert nil == Sanity.get_document("unknown", config)
+
+    assert [%{"_id" => ^id, "title" => "product x"}] = Sanity.get_documents([id], config)
+
+    assert [nil, %{"_id" => ^id, "title" => "product x"}] =
+             Sanity.get_documents(["unknown", id], config)
+
+    assert [%{"_id" => ^id, "title" => "product x"}, nil] =
+             Sanity.get_documents([id, "unknown"], config)
+
+    # FIXME get_documents
+  end
+
   test "mutate", %{config: config} do
     assert {:ok,
             %Response{
@@ -45,22 +72,23 @@ defmodule Sanity.MutateIntegrationTest do
              )
              |> Sanity.request(config)
 
-    assert {:ok,
-            %Response{body: %{"results" => [%{"document" => %{"title" => "Updated title"}}]}}} =
-             Sanity.mutate(
-               [
-                 %{
-                   patch: %{
-                     id: id,
-                     set: %{
-                       title: "Updated title"
-                     }
-                   }
-                 }
-               ],
-               return_documents: true
-             )
-             |> Sanity.request(config)
+    assert(
+      {:ok, %Response{body: %{"results" => [%{"document" => %{"title" => "Updated title"}}]}}} =
+        Sanity.mutate(
+          [
+            %{
+              patch: %{
+                id: id,
+                set: %{
+                  title: "Updated title"
+                }
+              }
+            }
+          ],
+          return_documents: true
+        )
+        |> Sanity.request(config)
+    )
 
     assert {:error, %Response{body: %{"error" => %{"description" => description}}}} =
              Sanity.mutate([
