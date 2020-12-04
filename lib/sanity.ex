@@ -31,7 +31,7 @@ defmodule Sanity do
   ]
 
   @doc """
-  Convenience function for fetching a single document by ID using `doc/1`.
+  Convenience function for fetching a single document by ID. See `doc/1`.
 
   ## Options
 
@@ -48,9 +48,10 @@ defmodule Sanity do
   end
 
   @doc """
-  Convenience function for fetching documents by ID using `doc/1`. The order/position of documents
-  is preserved based on the original list of IDs. If any documents cannot be found then the
-  returned list will contain `nil` for that document.
+  Convenience function for fetching a list of documents by ID. See `doc/1`.
+
+  The order/position of documents is preserved based on the original list of IDs. If any documents
+  cannot be found then the returned list will contain `nil` for that document.
 
   ## Options
 
@@ -73,9 +74,11 @@ defmodule Sanity do
   end
 
   @doc """
-  Generates a request for the [Doc endpoint](https://www.sanity.io/docs/http-doc). The Sanity docs
-  suggest using this endpoint sparingly because it is "less scalable/performant" than using
-  `query/3`. See `get_document/2` and `get_documents/2` for a more convenient interface.
+  Generates a request for the [Doc endpoint](https://www.sanity.io/docs/http-doc).
+
+  The Sanity docs suggest using this endpoint sparingly because it is "less scalable/performant"
+  than using `query/3`. See `get_document/2` and `get_documents/2` for a more convenient
+  interface.
   """
   @spec doc(String.t()) :: Request.t()
   def doc(document_id) when is_binary(document_id) do
@@ -120,8 +123,7 @@ defmodule Sanity do
   end
 
   @doc """
-  Submits a request to the Sanity API. Use one of the other functions in this module to generate
-  the request struct.
+  Submits a request to the Sanity API.
 
   ## Options
 
