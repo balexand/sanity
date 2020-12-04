@@ -50,8 +50,6 @@ defmodule Sanity.MutateIntegrationTest do
 
     assert [%{"_id" => ^id, "title" => "product x"}, nil] =
              Sanity.get_documents([id, "unknown"], config)
-
-    # FIXME get_documents
   end
 
   test "mutate", %{config: config} do

@@ -22,7 +22,7 @@ be found at [https://hexdocs.pm/sanity](https://hexdocs.pm/sanity).
 ## Supported endpoints
 
 - [ ] Assets
-- [ ] Doc
+- [x] Doc
 - [ ] Export
 - [ ] History
 - [ ] Listen
