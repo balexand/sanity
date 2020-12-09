@@ -1,6 +1,6 @@
 defmodule Sanity do
   @moduledoc """
-  FIXME write moduledoc
+  Client library for Sanity CMS. See the [README](readme.html) for examples.
   """
 
   alias Sanity.{Request, Response}
@@ -39,9 +39,7 @@ defmodule Sanity do
   @doc """
   Convenience function for fetching a single document by ID. See `doc/1`.
 
-  ## Options
-
-  #{NimbleOptions.docs(@request_options_schema)}
+  See `request/2` for supported options.
   """
   @spec get_document(String.t(), keyword()) :: map() | nil
   def get_document(document_id, opts) do
@@ -59,9 +57,7 @@ defmodule Sanity do
   The order/position of documents is preserved based on the original list of IDs. If any documents
   cannot be found then the returned list will contain `nil` for that document.
 
-  ## Options
-
-  #{NimbleOptions.docs(@request_options_schema)}
+  See `request/2` for supported options.
   """
   @spec get_documents([String.t()], keyword()) :: [map()]
   def get_documents(document_ids, opts) do
@@ -96,7 +92,22 @@ defmodule Sanity do
   end
 
   @doc """
-  FIXME write doc
+  Generates a request for the [Mutate](https://www.sanity.io/docs/http-mutations) endpoint.
+
+  ## Example
+
+      Sanity.mutate(
+        [
+          %{
+            create: %{
+              _type: "product",
+              title: "Test product"
+            }
+          }
+        ],
+        return_ids: true
+      )
+      |> Sanity.request(config)
   """
   @spec mutate([map], keyword() | map()) :: Request.t()
   def mutate(mutations, query_params \\ []) when is_list(mutations) do
@@ -109,8 +120,9 @@ defmodule Sanity do
   end
 
   @doc """
-  FIXME write doc
-  FIXME note about queries with no auth or invalid auth
+  Generates a request to the [Query](https://www.sanity.io/docs/http-query) endpoint. Requests to
+  this endpoint may be authenticated or unauthenticated. Unauthenticated requests to a dataset
+  with private visibility will succeed but will not return any documents.
   """
   @spec query(String.t(), keyword() | map(), keyword() | map()) :: Request.t()
   def query(query, variables \\ %{}, query_params \\ []) do
@@ -167,6 +179,8 @@ defmodule Sanity do
 
   @doc """
   Like `request/2`, but raises a `Sanity.Error` instead of returning and error tuple.
+
+  See `request/2` for supported options.
   """
   @spec request!(Request.t(), keyword()) :: Response.t()
   def request!(request, opts \\ []) do
