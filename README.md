@@ -1,23 +1,27 @@
 # Sanity
 
-**TODO: Add description**
+A client library for the Sanity CMS API.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `sanity` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `sanity` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:sanity, "~> 0.1.0"}
+    {:sanity, "~> 0.3.0"}
   ]
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/sanity](https://hexdocs.pm/sanity).
+The docs can be found at [https://hexdocs.pm/sanity](https://hexdocs.pm/sanity/Sanity.html).
+
+## Example
+
+```elixir
+Sanity.query(~S'*[_type == "product"]')
+|> Sanity.request(project_id: "abcdefgh", dataset: "production")
+```
 
 ## Supported endpoints
 
