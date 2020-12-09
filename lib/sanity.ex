@@ -6,6 +6,12 @@ defmodule Sanity do
   alias Sanity.{Request, Response}
 
   @request_options_schema [
+    cdn: [
+      type: :boolean,
+      default: false,
+      doc:
+        "Should the CDN be used? See the [Sanity docs](https://www.sanity.io/docs/api-cdn) for details."
+    ],
     dataset: [
       type: :string,
       doc: "Sanity dataset."
@@ -168,8 +174,14 @@ defmodule Sanity do
   end
 
   defp base_url(opts) do
-    # FIXME support cdn
-    "https://#{request_opt!(opts, :project_id)}.api.sanity.io"
+    domain =
+      if Keyword.get(opts, :cdn) do
+        "apicdn.sanity.io"
+      else
+        "api.sanity.io"
+      end
+
+    "https://#{request_opt!(opts, :project_id)}.#{domain}"
   end
 
   defp headers(opts) do

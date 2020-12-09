@@ -124,6 +124,18 @@ defmodule SanityTest do
                |> Sanity.request(@request_config)
     end
 
+    test "with CDN URL" do
+      Mox.expect(MockFinch, :request, fn %Finch.Request{host: "projectx.apicdn.sanity.io"},
+                                         Sanity.Finch,
+                                         _ ->
+        {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
+      end)
+
+      assert {:ok, %Response{body: %{}, headers: []}} ==
+               Sanity.query("*")
+               |> Sanity.request(Keyword.put(@request_config, :cdn, true))
+    end
+
     test "options validations" do
       query = Sanity.query("*")
 
@@ -140,7 +152,7 @@ defmodule SanityTest do
       end
 
       assert_raise ValidationError,
-                   "required option :dataset not found, received options: [:finch_mod, :http_options, :project_id, :token]",
+                   "required option :dataset not found, received options: [:cdn, :finch_mod, :http_options, :project_id, :token]",
                    fn ->
                      Sanity.request(query, Keyword.delete(@request_config, :dataset))
                    end

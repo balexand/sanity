@@ -128,5 +128,10 @@ defmodule Sanity.MutateIntegrationTest do
             }} =
              Sanity.query(~S<{"hello": $my_var}>)
              |> Sanity.request(config)
+
+    # with CDN
+    assert {:ok, %Response{body: %{"query" => "{\"hello\": \"world\"}", "result" => _}}} =
+             Sanity.query(~S<{"hello": "world"}>)
+             |> Sanity.request(Keyword.put(config, :cdn, true))
   end
 end
