@@ -157,5 +157,45 @@ defmodule SanityTest do
                      Sanity.request(query, Keyword.delete(@request_config, :dataset))
                    end
     end
+
+    test "5xx response" do
+      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+        {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
+      end)
+
+      assert_raise Sanity.Error,
+                   "%Finch.Response{body: \"fail!\", headers: [], status: 500}",
+                   fn ->
+                     Sanity.query("*") |> Sanity.request(@request_config)
+                   end
+    end
+
+    test "timeout error" do
+      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+        {:error, %Mint.TransportError{reason: :timeout}}
+      end)
+
+      assert_raise Sanity.Error,
+                   "%Mint.TransportError{reason: :timeout}",
+                   fn ->
+                     Sanity.query("*") |> Sanity.request(@request_config)
+                   end
+    end
+  end
+
+  test "request!" do
+    Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+      {:ok,
+       %Finch.Response{
+         body: "{\"error\":{\"description\":\"The mutation(s) failed...\"}}",
+         status: 409
+       }}
+    end)
+
+    assert_raise Sanity.Error,
+                 "%Sanity.Response{body: %{\"error\" => %{\"description\" => \"The mutation(s) failed...\"}}, headers: []}",
+                 fn ->
+                   Sanity.mutate([]) |> Sanity.request!(@request_config)
+                 end
   end
 end

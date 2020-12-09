@@ -129,7 +129,9 @@ defmodule Sanity do
   end
 
   @doc """
-  Submits a request to the Sanity API.
+  Submits a request to the Sanity API. Returns `{:ok, response}` upon success or `{:error,
+  response}` if a non-exceptional (4xx) error occurs. A `Sanity.Error` will be raised if an
+  exceptional error, such as a 5xx response code or a network timeout, occurs.
 
   ## Options
 
@@ -157,19 +159,20 @@ defmodule Sanity do
       {:ok, %Finch.Response{body: body, headers: headers, status: status}}
       when status in 400..499 ->
         {:error, %Response{body: Jason.decode!(body), headers: headers}}
-    end
 
-    # TODO raise a more useful exception than MatchError on http error
+      {_, error_or_response} ->
+        raise %Sanity.Error{source: error_or_response}
+    end
   end
 
   @doc """
-  FIXME
+  Like `request/2`, but raises a `Sanity.Error` instead of returning and error tuple.
   """
   @spec request!(Request.t(), keyword()) :: Response.t()
   def request!(request, opts \\ []) do
-    # TODO raise proper exception
     case request(request, opts) do
       {:ok, %Response{} = response} -> response
+      {:error, %Response{} = response} -> raise %Sanity.Error{source: response}
     end
   end
 
