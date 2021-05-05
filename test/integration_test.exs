@@ -124,7 +124,7 @@ defmodule Sanity.MutateIntegrationTest do
 
     assert {:error,
             %Response{
-              body: %{"error" => %{"description" => "Param $my_var referenced, but not provided"}}
+              body: %{"error" => %{"description" => "param $my_var referenced, but not provided"}}
             }} =
              Sanity.query(~S<{"hello": $my_var}>)
              |> Sanity.request(config)
