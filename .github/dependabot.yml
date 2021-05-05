@@ -6,12 +6,3 @@ updates:
     interval: daily
     time: "12:00"
   open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: ex_doc
-    versions:
-    - 0.24.0
-    - 0.24.1
-  - dependency-name: finch
-    versions:
-    - 0.6.1
-    - 0.6.2
