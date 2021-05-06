@@ -6,6 +6,10 @@ defmodule Sanity do
   alias Sanity.{Request, Response}
 
   @request_options_schema [
+    api_version: [
+      type: :string,
+      default: "v2021-03-25"
+    ],
     cdn: [
       type: :boolean,
       default: false,
@@ -228,15 +232,24 @@ defmodule Sanity do
   end
 
   defp url_for(%Request{endpoint: :doc, path_params: %{document_id: document_id}}, opts) do
-    "#{base_url(opts)}/v1/data/doc/#{request_opt!(opts, :dataset)}/#{document_id}"
+    api_version = request_opt!(opts, :api_version)
+    dataset = request_opt!(opts, :dataset)
+
+    "#{base_url(opts)}/#{api_version}/data/doc/#{dataset}/#{document_id}"
   end
 
   defp url_for(%Request{endpoint: :mutate}, opts) do
-    "#{base_url(opts)}/v1/data/mutate/#{request_opt!(opts, :dataset)}"
+    api_version = request_opt!(opts, :api_version)
+    dataset = request_opt!(opts, :dataset)
+
+    "#{base_url(opts)}/#{api_version}/data/mutate/#{dataset}"
   end
 
   defp url_for(%Request{endpoint: :query}, opts) do
-    "#{base_url(opts)}/v1/data/query/#{request_opt!(opts, :dataset)}"
+    api_version = request_opt!(opts, :api_version)
+    dataset = request_opt!(opts, :dataset)
+
+    "#{base_url(opts)}/#{api_version}/data/query/#{dataset}"
   end
 
   defp request_opt!(opts, key) do
