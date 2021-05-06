@@ -110,7 +110,7 @@ defmodule SanityTest do
                  headers: [{"authorization", "Bearer supersecret"}],
                  host: "projectx.api.sanity.io",
                  method: "GET",
-                 path: "/v1/data/query/myset",
+                 path: "/v2021-03-25/data/query/myset",
                  port: 443,
                  query: "%24var_2=%22y%22&query=%2A",
                  scheme: :https
@@ -152,7 +152,7 @@ defmodule SanityTest do
       end
 
       assert_raise ValidationError,
-                   "required option :dataset not found, received options: [:cdn, :finch_mod, :http_options, :project_id, :token]",
+                   "required option :dataset not found, received options: [:cdn, :api_version, :finch_mod, :http_options, :project_id, :token]",
                    fn ->
                      Sanity.request(query, Keyword.delete(@request_config, :dataset))
                    end
