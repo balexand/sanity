@@ -5,6 +5,16 @@ defmodule Sanity do
 
   alias Sanity.{Request, Response}
 
+  @asset_options_schema [
+    asset_type: [
+      default: :image,
+      type: {:in, [:image, :file]}
+    ],
+    content_type: [
+      type: :string
+    ]
+  ]
+
   @request_options_schema [
     api_version: [
       type: :string,
@@ -155,7 +165,8 @@ defmodule Sanity do
   """
   @spec request(Request.t(), keyword()) :: {:ok, Response.t()} | {:error, Response.t()}
   def request(
-        %Request{body: body, method: method, query_params: query_params} = request,
+        %Request{body: body, headers: headers, method: method, query_params: query_params} =
+          request,
         opts \\ []
       ) do
     opts = NimbleOptions.validate!(opts, @request_options_schema)
@@ -165,7 +176,7 @@ defmodule Sanity do
 
     url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
 
-    Finch.build(method, url, headers(opts), body)
+    Finch.build(method, url, headers(opts) ++ headers, body)
     |> finch_mod.request(Sanity.Finch, http_options)
     |> case do
       {:ok, %Finch.Response{body: body, headers: headers, status: status}}
@@ -192,6 +203,26 @@ defmodule Sanity do
       {:ok, %Response{} = response} -> response
       {:error, %Response{} = response} -> raise %Sanity.Error{source: response}
     end
+  end
+
+  # FIXME typespec and doc
+  def upload_asset(body, opts \\ [], query_params \\ []) do
+    opts = NimbleOptions.validate!(opts, @asset_options_schema)
+
+    headers =
+      case opts[:content_type] do
+        nil -> []
+        content_type -> [{"content-type", content_type}]
+      end
+
+    %Request{
+      body: body,
+      endpoint: :assets,
+      headers: headers,
+      method: :post,
+      query_params: camelize_params(query_params),
+      path_params: %{asset_type: opts[:asset_type]}
+    }
   end
 
   defp base_url(opts) do
@@ -229,6 +260,13 @@ defmodule Sanity do
       {k, v} when is_atom(k) -> {Atom.to_string(k), v}
     end)
     |> Map.new()
+  end
+
+  defp url_for(%Request{endpoint: :assets, path_params: %{asset_type: asset_type}}, opts) do
+    api_version = request_opt!(opts, :api_version)
+    dataset = request_opt!(opts, :dataset)
+
+    "#{base_url(opts)}/#{api_version}/assets/#{asset_type}s/#{dataset}"
   end
 
   defp url_for(%Request{endpoint: :doc, path_params: %{document_id: document_id}}, opts) do

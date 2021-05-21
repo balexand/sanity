@@ -3,6 +3,7 @@ defmodule Sanity.Request do
 
   defstruct body: nil,
             endpoint: nil,
+            headers: [],
             method: nil,
             path_params: nil,
             query_params: %{}
