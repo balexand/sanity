@@ -8,10 +8,12 @@ defmodule Sanity do
   @asset_options_schema [
     asset_type: [
       default: :image,
-      type: {:in, [:image, :file]}
+      type: {:in, [:image, :file]},
+      doc: "Either `:image` or `:file`."
     ],
     content_type: [
-      type: :string
+      type: :string,
+      doc: "Optional `content-type` header. It appears that Sanity is able to infer image types."
     ]
   ]
 
@@ -205,7 +207,27 @@ defmodule Sanity do
     end
   end
 
-  # FIXME typespec and doc
+  @doc """
+  Generates a request for the [asset endpoint](https://www.sanity.io/docs/http-api-assets).
+
+  ## Options
+
+  #{NimbleOptions.docs(@asset_options_schema)}
+
+  ## Query params
+
+  Sanity doesn't document the query params very well at this time, but the [Sanity Javascript
+  client](https://github.com/sanity-io/sanity/blob/next/packages/%40sanity/client/src/assets/assetsClient.js)
+  lists several possible query params:
+
+    * `label` - Label
+    * `title` - Title
+    * `description` - Description
+    * `filename` - Original filename
+    * `meta` - ???
+    * `creditLine` - The credit to person(s) and/or organization(s) required by the supplier of
+      the image to be used when published
+  """
   def upload_asset(body, opts \\ [], query_params \\ []) do
     opts = NimbleOptions.validate!(opts, @asset_options_schema)
 

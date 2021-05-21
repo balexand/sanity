@@ -27,3 +27,4 @@ sanity-*.tar
 /tmp
 
 .env
+.iex.exs
