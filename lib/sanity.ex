@@ -228,6 +228,7 @@ defmodule Sanity do
     * `creditLine` - The credit to person(s) and/or organization(s) required by the supplier of
       the image to be used when published
   """
+  @spec upload_asset(iodata(), keyword() | map(), keyword() | map()) :: Request.t()
   def upload_asset(body, opts \\ [], query_params \\ []) do
     opts = NimbleOptions.validate!(opts, @asset_options_schema)
 
