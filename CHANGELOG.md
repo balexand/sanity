@@ -1,5 +1,9 @@
 # Changelog
 
+# Dev
+
+- Update matrix of supported Elixir/Erlang versions ([#21](https://github.com/balexand/sanity/pull/21))
+
 ## v0.5.0 (2021-05-21)
 
 - Support asset uploads ([#20](https://github.com/balexand/sanity/pull/20))
