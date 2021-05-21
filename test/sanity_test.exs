@@ -198,4 +198,31 @@ defmodule SanityTest do
                    Sanity.mutate([]) |> Sanity.request!(@request_config)
                  end
   end
+
+  test "update_asset" do
+    assert Sanity.upload_asset("mydata") == %Request{
+             body: "mydata",
+             endpoint: :assets,
+             method: :post,
+             path_params: %{asset_type: :image},
+             query_params: %{}
+           }
+
+    assert Sanity.upload_asset("vid", [asset_type: :file, content_type: "video/mp4"],
+             filename: "cat.mp4"
+           ) == %Request{
+             body: "vid",
+             endpoint: :assets,
+             headers: [{"content-type", "video/mp4"}],
+             method: :post,
+             path_params: %{asset_type: :file},
+             query_params: %{"filename" => "cat.mp4"}
+           }
+
+    assert_raise NimbleOptions.ValidationError,
+                 "expected :asset_type to be one of [:image, :file], got: nil",
+                 fn ->
+                   Sanity.upload_asset("mydata", asset_type: nil)
+                 end
+  end
 end
