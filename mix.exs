@@ -7,7 +7,7 @@ defmodule Sanity.MixProject do
     [
       app: :sanity,
       version: @version,
-      elixir: "~> 1.8",
+      elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
       description: "Client library for Sanity CMS.",
       start_permanent: Mix.env() == :prod,
