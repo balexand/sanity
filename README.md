@@ -25,7 +25,7 @@ Sanity.query(~S'*[_type == "product"]')
 
 ## Supported endpoints
 
-- [ ] Assets
+- [x] Assets
 - [x] Doc
 - [ ] Export
 - [ ] History
