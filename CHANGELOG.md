@@ -1,7 +1,8 @@
 # Changelog
 
-# Dev
+# v0.6.0 (2021-05-25)
 
+- Drop `get_document` and `get_documents` functions ([#22](https://github.com/balexand/sanity/pull/22))
 - Update matrix of supported Elixir/Erlang versions ([#21](https://github.com/balexand/sanity/pull/21))
 
 ## v0.5.0 (2021-05-21)
