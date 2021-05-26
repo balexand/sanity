@@ -53,50 +53,10 @@ defmodule Sanity do
   ]
 
   @doc """
-  Convenience function for fetching a single document by ID. See `doc/1`.
-
-  See `request/2` for supported options.
-  """
-  @spec get_document(String.t(), keyword()) :: map() | nil
-  def get_document(document_id, opts) do
-    doc(document_id)
-    |> request!(opts)
-    |> case do
-      %Response{body: %{"documents" => []}} -> nil
-      %Response{body: %{"documents" => [doc]}} -> doc
-    end
-  end
-
-  @doc """
-  Convenience function for fetching a list of documents by ID. See `doc/1`.
-
-  The order/position of documents is preserved based on the original list of IDs. If any documents
-  cannot be found then the returned list will contain `nil` for that document.
-
-  See `request/2` for supported options.
-  """
-  @spec get_documents([String.t()], keyword()) :: [map()]
-  def get_documents(document_ids, opts) do
-    %Response{body: %{"documents" => documents}} =
-      document_ids
-      |> Enum.join(",")
-      |> doc()
-      |> request!(opts)
-
-    docs_by_id =
-      documents
-      |> Enum.map(fn %{"_id" => id} = doc -> {id, doc} end)
-      |> Map.new()
-
-    Enum.map(document_ids, &docs_by_id[&1])
-  end
-
-  @doc """
   Generates a request for the [Doc endpoint](https://www.sanity.io/docs/http-doc).
 
   The Sanity docs suggest using this endpoint sparingly because it is "less scalable/performant"
-  than using `query/3`. See `get_document/2` and `get_documents/2` for a more convenient
-  interface.
+  than using `query/3`.
   """
   @spec doc(String.t()) :: Request.t()
   def doc(document_id) when is_binary(document_id) do
