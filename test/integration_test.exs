@@ -27,7 +27,7 @@ defmodule Sanity.MutateIntegrationTest do
     %{config: config}
   end
 
-  test "doc, get_document, and get_documents", %{config: config} do
+  test "doc", %{config: config} do
     {:ok, %Response{body: %{"results" => [%{"id" => id}]}}} =
       Sanity.mutate(
         [
