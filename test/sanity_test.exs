@@ -220,7 +220,7 @@ defmodule SanityTest do
            }
 
     assert_raise NimbleOptions.ValidationError,
-                 "expected :asset_type to be one of [:image, :file], got: nil",
+                 "expected :asset_type to be in [:image, :file], got: nil",
                  fn ->
                    Sanity.upload_asset("mydata", asset_type: nil)
                  end
