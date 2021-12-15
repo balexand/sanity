@@ -1,5 +1,9 @@
 # Changelog
 
+# v0.6.1 (2021-12-15)
+
+- Relax version requirement for `nimble_options` dependency ([#37](https://github.com/balexand/sanity/pull/37))
+
 # v0.6.0 (2021-05-25)
 
 - Drop `get_document` and `get_documents` functions ([#22](https://github.com/balexand/sanity/pull/22))
