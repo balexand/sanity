@@ -9,14 +9,14 @@ The package can be installed by adding `sanity` to your list of dependencies in 
 ```elixir
 def deps do
   [
-    {:sanity, "~> 0.7.0"}
+    {:sanity, "~> 0.8.0"}
   ]
 end
 ```
 
 The docs can be found at [https://hexdocs.pm/sanity](https://hexdocs.pm/sanity/Sanity.html).
 
-## Example
+## Examples
 
 ```elixir
 Sanity.query(~S'*[_type == "product"]')
