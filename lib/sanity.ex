@@ -117,6 +117,21 @@ defmodule Sanity do
   end
 
   @doc """
+  Returns the result from a `Sanity.Response` struct.
+
+  ## Examples
+
+    iex> Sanity.result!(%Sanity.Response{body: %{"result" => []}})
+    []
+
+    iex> Sanity.result!(%Sanity.Response{body: %{}})
+    ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil}
+  """
+  @spec result!(Response.t()) :: any()
+  def result!(%Response{body: %{"result" => result}}), do: result
+  def result!(%Response{} = response), do: raise(%Sanity.Error{source: response})
+
+  @doc """
   Submits a request to the Sanity API. Returns `{:ok, response}` upon success or `{:error,
   response}` if a non-exceptional (4xx) error occurs. A `Sanity.Error` will be raised if an
   exceptional error, such as a 5xx response code or a network timeout, occurs.
