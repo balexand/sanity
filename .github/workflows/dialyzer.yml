@@ -1,0 +1,28 @@
+name: Elixir Dialyzer
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  dialyzer:
+
+    name: Dialyzer
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Elixir
+      uses: erlef/setup-elixir@885971a72ed1f9240973bd92ab57af8c1aa68f24
+      with:
+        elixir-version: '1.13'
+        otp-version: '24'
+
+    - run: mix archive.install hex nerves_bootstrap --force
+
+    - name: Install dependencies
+      run: mix deps.get
+
+    - run: mix dialyzer
