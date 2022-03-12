@@ -60,8 +60,11 @@ defmodule Sanity do
     iex> Sanity.atomize_and_underscore(%{"_id" => "123", "myField" => [%{"aB" => "aB"}]})
     %{_id: "123", my_field: [%{a_b: "aB"}]}
 
-    iex> Sanity.atomize_and_underscore([%{"abcDef" => 1}])
+    iex> Sanity.atomize_and_underscore([%{"AbcDef" => 1}])
     [%{abc_def: 1}]
+
+    iex> Sanity.atomize_and_underscore(%{"already_underscore" => 1})
+    %{already_underscore: 1}
   """
   @spec atomize_and_underscore(any()) :: any()
   def atomize_and_underscore(%{} = map) do
