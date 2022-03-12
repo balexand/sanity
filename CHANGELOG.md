@@ -1,5 +1,10 @@
 # Changelog
 
+# v0.7.0 (2022-03-12)
+
+- Add `Sanity.result!/1` function ([#47](https://github.com/balexand/sanity/pull/47))
+- Run dialyzer on CI and update supported Elixir versions ([#46](https://github.com/balexand/sanity/pull/46))
+
 # v0.6.1 (2021-12-15)
 
 - Relax version requirement for `nimble_options` dependency ([#37](https://github.com/balexand/sanity/pull/37))
