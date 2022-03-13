@@ -57,14 +57,14 @@ defmodule Sanity do
 
   ## Examples
 
-    iex> Sanity.atomize_and_underscore(%{"_id" => "123", "myField" => [%{"aB" => "aB"}]})
-    %{_id: "123", my_field: [%{a_b: "aB"}]}
+      iex> Sanity.atomize_and_underscore(%{"_id" => "123", "myField" => [%{"aB" => "aB"}]})
+      %{_id: "123", my_field: [%{a_b: "aB"}]}
 
-    iex> Sanity.atomize_and_underscore([%{"AbcDef" => 1}])
-    [%{abc_def: 1}]
+      iex> Sanity.atomize_and_underscore([%{"AbcDef" => 1}])
+      [%{abc_def: 1}]
 
-    iex> Sanity.atomize_and_underscore(%{"already_underscore" => 1})
-    %{already_underscore: 1}
+      iex> Sanity.atomize_and_underscore(%{"already_underscore" => 1})
+      %{already_underscore: 1}
   """
   @spec atomize_and_underscore(any()) :: any()
   def atomize_and_underscore(%{} = map) do
@@ -154,11 +154,11 @@ defmodule Sanity do
 
   ## Examples
 
-    iex> Sanity.result!(%Sanity.Response{body: %{"result" => []}})
-    []
+      iex> Sanity.result!(%Sanity.Response{body: %{"result" => []}})
+      []
 
-    iex> Sanity.result!(%Sanity.Response{body: %{}})
-    ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil}
+      iex> Sanity.result!(%Sanity.Response{body: %{}})
+      ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil}
   """
   @spec result!(Response.t()) :: any()
   def result!(%Response{body: %{"result" => result}}), do: result
