@@ -1,5 +1,9 @@
 # Changelog
 
+# v0.8.1 (2022-03-12)
+
+- Fix doctest format
+
 # v0.8.0 (2022-03-12)
 
 - Add `Sanity.atomize_and_underscore/1` ([#48](https://github.com/balexand/sanity/pull/48))
