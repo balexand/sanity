@@ -1,5 +1,7 @@
 # Sanity
 
+[![Package](https://img.shields.io/badge/-Package-important)](https://hex.pm/packages/sanity) [![Documentation](https://img.shields.io/badge/-Documentation-blueviolet)](https://hexdocs.pm/sanity)
+
 A client library for the Sanity CMS API.
 
 ## Installation
