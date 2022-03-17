@@ -53,7 +53,10 @@ defmodule Sanity do
   ]
 
   @doc """
-  Deeply traverses nested maps and lists and converts string keys to atoms in underscore_case.
+  Deeply traverses nested maps and lists and converts string keys to atoms in `underscore_case`.
+
+  Untrusted user data should not be passed to this function. See warning in `String.to_atom/1` for
+  details.
 
   ## Examples
 
