@@ -14,11 +14,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Set up Elixir
       uses: erlef/setup-elixir@885971a72ed1f9240973bd92ab57af8c1aa68f24
       with:
         elixir-version: '1.13'
         otp-version: '24'
+
+    - name: Restore dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          deps
+          _build
+        key: dia-${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
 
     - name: Install dependencies
       run: mix deps.get
