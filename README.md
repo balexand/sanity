@@ -22,7 +22,7 @@ The docs can be found at [https://hexdocs.pm/sanity](https://hexdocs.pm/sanity/S
 
 ```elixir
 Sanity.query(~S'*[_type == "product"]')
-|> Sanity.request(project_id: "abcdefgh", dataset: "production")
+|> Sanity.request(project_id: "abc", dataset: "production")
 ```
 
 ## Supported endpoints
