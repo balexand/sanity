@@ -159,7 +159,10 @@ defmodule Sanity do
 
   ## Examples
 
-      iex> Sanity.replace_references(%{_ref: "abc", _type: "reference"}, fn _ -> %{_id: "abc"} end)
+      iex> Sanity.replace_references(%{_ref: "abc", _type: "reference"}, fn "abc" -> %{_id: "abc"} end)
+      %{_id: "abc"}
+
+      iex> Sanity.replace_references(%{_ref: "abc"}, fn "abc" -> %{_id: "abc"} end)
       %{_id: "abc"}
 
       iex> Sanity.replace_references([%{_ref: "abc", _type: "reference"}], fn _ -> %{_id: "abc"} end)
@@ -178,9 +181,10 @@ defmodule Sanity do
     Enum.map(list, &_replace_references(&1, func))
   end
 
-  defp _replace_references(%{_type: "reference", _ref: _ref} = ref, func) do
-    func.(ref)
-  end
+  defp _replace_references(%{_type: "reference", _ref: ref}, func), do: func.(ref)
+
+  # Some Sanity plugs, such as the Mux input plugin, don't include _type field in reference
+  defp _replace_references(%{_ref: ref} = m, func) when not is_map_key(m, :_type), do: func.(ref)
 
   defp _replace_references(%{} = map, func) do
     Map.new(map, fn {k, v} -> {k, _replace_references(v, func)} end)
