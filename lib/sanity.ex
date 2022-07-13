@@ -40,7 +40,7 @@ defmodule Sanity do
     http_options: [
       type: :keyword_list,
       doc: "Options to be passed to `Finch.request/3`.",
-      default: []
+      default: [receive_timeout: 30_000]
     ],
     project_id: [
       type: :string,
