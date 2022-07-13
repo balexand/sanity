@@ -19,7 +19,7 @@ jobs:
       uses: erlef/setup-elixir@885971a72ed1f9240973bd92ab57af8c1aa68f24
       with:
         elixir-version: '1.13'
-        otp-version: '24'
+        otp-version: '25'
 
     - name: Restore dependencies cache
       uses: actions/cache@v2
