@@ -1,5 +1,9 @@
 # Changelog
 
+# v0.9.0 (2022-07-13)
+
+- Increase default HTTP receive timeout to 30 seconds
+
 # v0.8.1 (2022-03-12)
 
 - Fix doctest format
