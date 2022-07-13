@@ -153,6 +153,42 @@ defmodule Sanity do
   end
 
   @doc """
+  Replaces Sanity references with the referenced document. The input can be a single document or
+  list of documents. References can be deeply nested within the documents. Documents should have
+  atomized keys. See `atomize_and_underscore/1`.
+
+  ## Examples
+
+      iex> Sanity.replace_references(%{_ref: "abc", _type: "reference"}, fn _ -> %{_id: "abc"} end)
+      %{_id: "abc"}
+
+      iex> Sanity.replace_references([%{_ref: "abc", _type: "reference"}], fn _ -> %{_id: "abc"} end)
+      [%{_id: "abc"}]
+
+      iex> Sanity.replace_references([%{a: %{_ref: "abc", _type: "reference"}, b: 1}], fn _ -> %{_id: "abc"} end)
+      [%{a: %{_id: "abc"}, b: 1}]
+  """
+  @spec replace_references(list() | map(), fun()) :: list() | map()
+  def replace_references(doc_or_docs, func)
+      when (is_list(doc_or_docs) or is_map(doc_or_docs)) and is_function(func) do
+    _replace_references(doc_or_docs, func)
+  end
+
+  defp _replace_references(list, func) when is_list(list) do
+    Enum.map(list, &_replace_references(&1, func))
+  end
+
+  defp _replace_references(%{_type: "reference", _ref: _ref} = ref, func) do
+    func.(ref)
+  end
+
+  defp _replace_references(%{} = map, func) do
+    Map.new(map, fn {k, v} -> {k, _replace_references(v, func)} end)
+  end
+
+  defp _replace_references(any, _func), do: any
+
+  @doc """
   Returns the result from a `Sanity.Response` struct.
 
   ## Examples
