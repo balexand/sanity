@@ -1,5 +1,9 @@
 # Changelog
 
+# v0.10.0 (2022-07-13)
+
+- Fix bug in `Sanity.replace_references/2` when reference object doesn't have `_type` field
+
 # v0.9.0 (2022-07-13)
 
 - Increase default HTTP receive timeout to 30 seconds
