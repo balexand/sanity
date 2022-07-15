@@ -183,7 +183,7 @@ defmodule Sanity do
 
   defp _replace_references(%{_type: "reference", _ref: ref}, func), do: func.(ref)
 
-  # Some Sanity plugs, such as the Mux input plugin, don't include _type field in reference
+  # Some Sanity plugins, such as the Mux input plugin, don't include _type field in reference
   defp _replace_references(%{_ref: ref} = m, func) when not is_map_key(m, :_type), do: func.(ref)
 
   defp _replace_references(%{} = map, func) do
