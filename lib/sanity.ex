@@ -118,16 +118,22 @@ defmodule Sanity do
 
   @doc """
   Replaces Sanity references with the referenced document. The input can be a single document or
-  list of documents. References can be deeply nested within the documents. Documents should have
-  atomized keys. See `atomize_and_underscore/1`.
+  list of documents. References can be deeply nested within the documents. Documents can have
+  either atom or string keys.
 
   ## Examples
 
       iex> Sanity.replace_references(%{_ref: "abc", _type: "reference"}, fn "abc" -> %{_id: "abc"} end)
       %{_id: "abc"}
 
+      iex> Sanity.replace_references(%{"_ref" => "abc", "_type" => "reference"}, fn "abc" -> %{"_id" => "abc"} end)
+      %{"_id" => "abc"}
+
       iex> Sanity.replace_references(%{_ref: "abc"}, fn "abc" -> %{_id: "abc"} end)
       %{_id: "abc"}
+
+      iex> Sanity.replace_references(%{"_ref" => "abc"}, fn "abc" -> %{"_id" => "abc"} end)
+      %{"_id" => "abc"}
 
       iex> Sanity.replace_references([%{_ref: "abc", _type: "reference"}], fn _ -> %{_id: "abc"} end)
       [%{_id: "abc"}]
@@ -146,9 +152,13 @@ defmodule Sanity do
   end
 
   defp _replace_references(%{_type: "reference", _ref: ref}, func), do: func.(ref)
+  defp _replace_references(%{"_type" => "reference", "_ref" => ref}, func), do: func.(ref)
 
   # Some Sanity plugins, such as the Mux input plugin, don't include _type field in reference
   defp _replace_references(%{_ref: ref} = m, func) when not is_map_key(m, :_type), do: func.(ref)
+
+  defp _replace_references(%{"_ref" => ref} = m, func) when not is_map_key(m, "_type"),
+    do: func.(ref)
 
   defp _replace_references(%{} = map, func) do
     Map.new(map, fn {k, v} -> {k, _replace_references(v, func)} end)
