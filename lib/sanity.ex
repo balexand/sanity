@@ -53,42 +53,6 @@ defmodule Sanity do
   ]
 
   @doc """
-  Deeply traverses nested maps and lists and converts string keys to atoms in `underscore_case`.
-
-  Untrusted user data should not be passed to this function. See warning in `String.to_atom/1` for
-  details.
-
-  ## Examples
-
-      iex> Sanity.atomize_and_underscore(%{"_id" => "123", "myField" => [%{"aB" => "aB"}]})
-      %{_id: "123", my_field: [%{a_b: "aB"}]}
-
-      iex> Sanity.atomize_and_underscore([%{"AbcDef" => 1}])
-      [%{abc_def: 1}]
-
-      iex> Sanity.atomize_and_underscore(%{"already_underscore" => 1})
-      %{already_underscore: 1}
-  """
-  @spec atomize_and_underscore(any()) :: any()
-  def atomize_and_underscore(%{} = map) do
-    map
-    |> Enum.map(fn
-      {k, v} when is_binary(k) ->
-        {k |> Macro.underscore() |> String.to_atom(), atomize_and_underscore(v)}
-
-      {k, v} ->
-        {k, atomize_and_underscore(v)}
-    end)
-    |> Map.new()
-  end
-
-  def atomize_and_underscore(list) when is_list(list) do
-    Enum.map(list, &atomize_and_underscore/1)
-  end
-
-  def atomize_and_underscore(v), do: v
-
-  @doc """
   Generates a request for the [Doc endpoint](https://www.sanity.io/docs/http-doc).
 
   The Sanity docs suggest using this endpoint sparingly because it is "less scalable/performant"
