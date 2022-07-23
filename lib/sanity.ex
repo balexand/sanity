@@ -53,42 +53,6 @@ defmodule Sanity do
   ]
 
   @doc """
-  Deeply traverses nested maps and lists and converts string keys to atoms in `underscore_case`.
-
-  Untrusted user data should not be passed to this function. See warning in `String.to_atom/1` for
-  details.
-
-  ## Examples
-
-      iex> Sanity.atomize_and_underscore(%{"_id" => "123", "myField" => [%{"aB" => "aB"}]})
-      %{_id: "123", my_field: [%{a_b: "aB"}]}
-
-      iex> Sanity.atomize_and_underscore([%{"AbcDef" => 1}])
-      [%{abc_def: 1}]
-
-      iex> Sanity.atomize_and_underscore(%{"already_underscore" => 1})
-      %{already_underscore: 1}
-  """
-  @spec atomize_and_underscore(any()) :: any()
-  def atomize_and_underscore(%{} = map) do
-    map
-    |> Enum.map(fn
-      {k, v} when is_binary(k) ->
-        {k |> Macro.underscore() |> String.to_atom(), atomize_and_underscore(v)}
-
-      {k, v} ->
-        {k, atomize_and_underscore(v)}
-    end)
-    |> Map.new()
-  end
-
-  def atomize_and_underscore(list) when is_list(list) do
-    Enum.map(list, &atomize_and_underscore/1)
-  end
-
-  def atomize_and_underscore(v), do: v
-
-  @doc """
   Generates a request for the [Doc endpoint](https://www.sanity.io/docs/http-doc).
 
   The Sanity docs suggest using this endpoint sparingly because it is "less scalable/performant"
@@ -154,16 +118,22 @@ defmodule Sanity do
 
   @doc """
   Replaces Sanity references with the referenced document. The input can be a single document or
-  list of documents. References can be deeply nested within the documents. Documents should have
-  atomized keys. See `atomize_and_underscore/1`.
+  list of documents. References can be deeply nested within the documents. Documents can have
+  either atom or string keys.
 
   ## Examples
 
       iex> Sanity.replace_references(%{_ref: "abc", _type: "reference"}, fn "abc" -> %{_id: "abc"} end)
       %{_id: "abc"}
 
+      iex> Sanity.replace_references(%{"_ref" => "abc", "_type" => "reference"}, fn "abc" -> %{"_id" => "abc"} end)
+      %{"_id" => "abc"}
+
       iex> Sanity.replace_references(%{_ref: "abc"}, fn "abc" -> %{_id: "abc"} end)
       %{_id: "abc"}
+
+      iex> Sanity.replace_references(%{"_ref" => "abc"}, fn "abc" -> %{"_id" => "abc"} end)
+      %{"_id" => "abc"}
 
       iex> Sanity.replace_references([%{_ref: "abc", _type: "reference"}], fn _ -> %{_id: "abc"} end)
       [%{_id: "abc"}]
@@ -182,9 +152,13 @@ defmodule Sanity do
   end
 
   defp _replace_references(%{_type: "reference", _ref: ref}, func), do: func.(ref)
+  defp _replace_references(%{"_type" => "reference", "_ref" => ref}, func), do: func.(ref)
 
   # Some Sanity plugins, such as the Mux input plugin, don't include _type field in reference
   defp _replace_references(%{_ref: ref} = m, func) when not is_map_key(m, :_type), do: func.(ref)
+
+  defp _replace_references(%{"_ref" => ref} = m, func) when not is_map_key(m, "_type"),
+    do: func.(ref)
 
   defp _replace_references(%{} = map, func) do
     Map.new(map, fn {k, v} -> {k, _replace_references(v, func)} end)
