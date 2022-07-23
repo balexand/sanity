@@ -11,7 +11,7 @@ The package can be installed by adding `sanity` to your list of dependencies in 
 ```elixir
 def deps do
   [
-    {:sanity, "~> 0.10.0"}
+    {:sanity, "~> 0.11.0"}
   ]
 end
 ```
