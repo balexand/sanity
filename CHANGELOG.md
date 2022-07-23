@@ -1,5 +1,8 @@
 # Changelog
 
+# v0.11.0 (2022-07-23)
+- BREAKING - Remove `Sanity.atomize_and_underscore/1` ([#57](https://github.com/balexand/sanity/pull/57))
+
 # v0.10.0 (2022-07-13)
 
 - Fix bug in `Sanity.replace_references/2` when reference object doesn't have `_type` field
