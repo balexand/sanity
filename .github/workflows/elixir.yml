@@ -5,7 +5,7 @@ on: push
 jobs:
   build:
     name: Build and test
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
@@ -19,8 +19,6 @@ jobs:
         with:
           elixir-version: ${{ matrix.elixir-version }}
           otp-version: ${{ matrix.otp-version }}
-
-      - run: mix local.rebar --force
 
       - name: Install dependencies
         run: mix deps.get
