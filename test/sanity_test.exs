@@ -163,11 +163,14 @@ defmodule SanityTest do
         {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
       end)
 
-      assert_raise Sanity.Error,
-                   "%Finch.Response{body: \"fail!\", headers: [], status: 500}",
-                   fn ->
-                     Sanity.query("*") |> Sanity.request(@request_config)
-                   end
+      exception =
+        assert_raise Sanity.Error, ~R'%Finch.Response{', fn ->
+          Sanity.query("*") |> Sanity.request(@request_config)
+        end
+
+      assert exception == %Sanity.Error{
+               source: %Finch.Response{body: "fail!", headers: [], status: 500}
+             }
     end
 
     test "timeout error" do
