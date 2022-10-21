@@ -261,6 +261,11 @@ defmodule Sanity do
       default: 3,
       doc: "Number of request attempts to make per batch request. See `request/2`."
     ],
+    projection: [
+      type: :string,
+      default: "{ ... }",
+      doc: "GROQ projection. Must include the `_id` field."
+    ],
     query: [
       type: :string,
       doc: ~S'Query string, like `_type == "page"`. By default, all documents will be selected.'
