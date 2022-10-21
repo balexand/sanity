@@ -55,7 +55,7 @@ defmodule Sanity do
       type: :pos_integer,
       default: 1_000,
       doc:
-        "Delay in ms to wait between before retrying after an error. Applies if `max_attempts` is greater than `1`."
+        "Delay in ms to wait before retrying after an error. Applies if `max_attempts` is greater than `1`."
     ],
     token: [
       type: :string,
