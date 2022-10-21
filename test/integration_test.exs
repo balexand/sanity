@@ -77,7 +77,7 @@ defmodule Sanity.MutateIntegrationTest do
         |> Sanity.request(config)
     )
 
-    assert {:error, %Response{body: %{"error" => %{"description" => description}}}} =
+    assert {:error, %Response{body: %{"error" => %{"description" => _}}}} =
              Sanity.mutate([
                %{
                  patch: %{
@@ -90,8 +90,6 @@ defmodule Sanity.MutateIntegrationTest do
                }
              ])
              |> Sanity.request(config)
-
-    assert description =~ "has unexpected revision ID"
   end
 
   test "query", %{config: config} do
