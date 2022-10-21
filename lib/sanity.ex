@@ -34,17 +34,28 @@ defmodule Sanity do
     ],
     finch_mod: [
       type: :atom,
-      doc: false,
-      default: Finch
+      default: Finch,
+      doc: false
     ],
     http_options: [
       type: :keyword_list,
-      doc: "Options to be passed to `Finch.request/3`.",
-      default: [receive_timeout: 30_000]
+      default: [receive_timeout: 30_000],
+      doc: "Options to be passed to `Finch.request/3`."
+    ],
+    max_attempts: [
+      type: :pos_integer,
+      default: 1,
+      doc: "Number of attempts to make before returning error."
     ],
     project_id: [
       type: :string,
       doc: "Sanity project ID."
+    ],
+    retry_delay: [
+      type: :pos_integer,
+      default: 1_000,
+      doc:
+        "Delay in ms to wait between before retrying after an error. Applies if `max_attempts` is greater than `1`."
     ],
     token: [
       type: :string,
@@ -230,6 +241,62 @@ defmodule Sanity do
       {:ok, %Response{} = response} -> response
       {:error, %Response{} = response} -> raise %Sanity.Error{source: response}
     end
+  end
+
+  @stream_options_schema [
+    batch_size: [
+      type: :pos_integer,
+      default: 1_000,
+      doc:
+        ~S'Number of results to fetch per request. The Sanity docs say: "In the general case, we recommend a batch size of no more than 5,000. If your documents are very large, a smaller batch size is better."'
+    ],
+    drafts: [
+      type: {:in, [:exclude, :include, :only]},
+      default: :exclude,
+      doc:
+        "Use `:exclude` to exclude drafts, `:include` to include drafts along with published docs, or `:only` to fetch drafts and not published documents."
+    ],
+    max_attempts: [
+      type: :pos_integer,
+      default: 3,
+      doc: "Number of request attempts to make per batch request. See `request/2`."
+    ],
+    query: [
+      type: :string,
+      doc: ~S'Query string, like `_type == "page"`. By default, all documents will be selected.'
+    ],
+    request_opts: [
+      type: :keyword_list,
+      required: true,
+      doc:
+        "Options to be passed to `request/2`. If `max_attempts` is omitted then it will default to `3`."
+    ],
+    variables: [
+      # TODO change type to :map after updating to NimbleOptions 0.5.0
+      type: :any,
+      default: %{},
+      doc: "Map of variables to be used with `query`."
+    ]
+  ]
+
+  @doc """
+  Returns a lazy `Stream` of results for the given query. The implementation is efficient, and
+  suitable for iterating over very large datasets. It is based on the [Paginating with
+  GROQ](https://www.sanity.io/docs/paginating-with-groq) article from the Sanity docs.
+
+  Failed attempts to fetch a batch will be retried by default. If the max attempts are exceeded
+  then an exception will be raised as descrbied in `request!/2`.
+
+  The current implementation always sorts by ascending `_id`. Support for sorting by other fields
+  may be supported in the future.
+
+  ## Options
+
+  #{NimbleOptions.docs(@stream_options_schema)}
+  """
+  def stream(opts) do
+    _opts = NimbleOptions.validate!(opts, @stream_options_schema)
+    # FIXME
   end
 
   @doc """

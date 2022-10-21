@@ -151,11 +151,9 @@ defmodule SanityTest do
         Sanity.request(query, project_id: 1)
       end
 
-      assert_raise ValidationError,
-                   "required option :dataset not found, received options: [:cdn, :api_version, :finch_mod, :http_options, :project_id, :token]",
-                   fn ->
-                     Sanity.request(query, Keyword.delete(@request_config, :dataset))
-                   end
+      assert_raise ValidationError, ~R{required option :dataset not found}, fn ->
+        Sanity.request(query, Keyword.delete(@request_config, :dataset))
+      end
     end
 
     test "5xx response" do
@@ -200,6 +198,11 @@ defmodule SanityTest do
                  fn ->
                    Sanity.mutate([]) |> Sanity.request!(@request_config)
                  end
+  end
+
+  test "stream" do
+    Sanity.stream(request_opts: [])
+    # FIXME
   end
 
   test "update_asset" do
