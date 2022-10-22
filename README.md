@@ -25,6 +25,11 @@ Sanity.query(~S'*[_type == "product"]')
 |> Sanity.request(project_id: "abc", dataset: "production")
 ```
 
+## Related Projects
+
+* [`sanity_components`](https://github.com/balexand/sanity_components) - Phoenix components for rendering [images](https://www.sanity.io/docs/presenting-images) and [portable text](https://www.sanity.io/docs/presenting-block-text).
+* [`sanity_sync`](https://github.com/balexand/sanity_sync) - For syncing content from Sanity CMS to Ecto.
+
 ## Supported endpoints
 
 - [x] Assets
