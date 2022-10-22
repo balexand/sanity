@@ -27,6 +27,7 @@ Sanity.query(~S'*[_type == "product"]')
 
 ## Related Projects
 
+* [`cms`](https://github.com/balexand/cms) - An experimental library for syncing content from any headless CMS to ETS tables.
 * [`sanity_components`](https://github.com/balexand/sanity_components) - Phoenix components for rendering [images](https://www.sanity.io/docs/presenting-images) and [portable text](https://www.sanity.io/docs/presenting-block-text).
 * [`sanity_sync`](https://github.com/balexand/sanity_sync) - For syncing content from Sanity CMS to Ecto.
 
