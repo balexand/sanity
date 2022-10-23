@@ -218,7 +218,7 @@ defmodule SanityTest do
         %Response{body: %{"result" => [%{"_id" => "a"}]}}
       end)
 
-      Sanity.stream(request_module: MockSanity, request_opts: []) |> Enum.to_list()
+      Sanity.stream(request_module: MockSanity, request_opts: @request_config) |> Enum.to_list()
     end
 
     test "opts[:drafts] == :include" do
@@ -230,7 +230,7 @@ defmodule SanityTest do
         %Response{body: %{"result" => [%{"_id" => "a"}]}}
       end)
 
-      Sanity.stream(drafts: :include, request_module: MockSanity, request_opts: [])
+      Sanity.stream(drafts: :include, request_module: MockSanity, request_opts: @request_config)
       |> Enum.to_list()
     end
 
@@ -243,19 +243,54 @@ defmodule SanityTest do
         %Response{body: %{"result" => [%{"_id" => "a"}]}}
       end)
 
-      Sanity.stream(drafts: :only, request_module: MockSanity, request_opts: []) |> Enum.to_list()
+      Sanity.stream(drafts: :only, request_module: MockSanity, request_opts: @request_config)
+      |> Enum.to_list()
     end
 
     test "opts[:drafts] == :invalid" do
       assert_raise NimbleOptions.ValidationError,
                    "expected :drafts to be in [:exclude, :include, :only], got: :invalid",
                    fn ->
-                     Sanity.stream(drafts: :invalid, request_opts: [])
+                     Sanity.stream(drafts: :invalid, request_opts: @request_config)
                    end
     end
 
     test "pagination" do
-      # FIXME
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" => "*[(!(_id in path('drafts.**')))] | order(_id) [0..4] { ... }"
+               }
+
+        results = Enum.map(1..5, &%{"_id" => "doc-#{&1}"})
+        %Response{body: %{"result" => results}}
+      end)
+
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" =>
+                   "*[(!(_id in path('drafts.**'))) && (_id > $pagination_last_id)] | order(_id) [0..4] { ... }",
+                 "$pagination_last_id" => "\"doc-5\""
+               }
+
+        results = Enum.map(6..8, &%{"_id" => "doc-#{&1}"})
+        %Response{body: %{"result" => results}}
+      end)
+
+      assert Sanity.stream(
+               batch_size: 5,
+               request_module: MockSanity,
+               request_opts: @request_config
+             )
+             |> Enum.to_list() == [
+               %{"_id" => "doc-1"},
+               %{"_id" => "doc-2"},
+               %{"_id" => "doc-3"},
+               %{"_id" => "doc-4"},
+               %{"_id" => "doc-5"},
+               %{"_id" => "doc-6"},
+               %{"_id" => "doc-7"},
+               %{"_id" => "doc-8"}
+             ]
     end
 
     test "query, projection, and variables options" do
@@ -266,7 +301,7 @@ defmodule SanityTest do
                    "*[(_type == $type) && (!(_id in path('drafts.**')))] | order(_id) [0..999] { _id, title }"
                }
 
-        assert request_opts == [max_attempts: 3]
+        assert request_opts[:max_attempts] == 3
 
         %Response{body: %{"result" => [%{"_id" => "a", "title" => "home"}]}}
       end)
@@ -276,7 +311,7 @@ defmodule SanityTest do
           projection: "{ _id, title }",
           query: "_type == $type",
           request_module: MockSanity,
-          request_opts: [],
+          request_opts: @request_config,
           variables: %{type: "page"}
         )
         |> Enum.to_list()
@@ -286,11 +321,11 @@ defmodule SanityTest do
 
     test "unpermitted variable name" do
       assert_raise ArgumentError, "variable names not permitted: [:pagination_last_id]", fn ->
-        Sanity.stream(request_opts: [], variables: %{pagination_last_id: ""})
+        Sanity.stream(request_opts: @request_config, variables: %{pagination_last_id: ""})
       end
 
       assert_raise ArgumentError, "variable names not permitted: [\"pagination_last_id\"]", fn ->
-        Sanity.stream(request_opts: [], variables: %{"pagination_last_id" => ""})
+        Sanity.stream(request_opts: @request_config, variables: %{"pagination_last_id" => ""})
       end
     end
   end
