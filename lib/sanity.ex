@@ -3,6 +3,8 @@ defmodule Sanity do
   Client library for Sanity CMS. See the [README](readme.html) for examples.
   """
 
+  @behaviour Sanity.Behaviour
+
   alias Sanity.{Request, Response}
 
   @asset_options_schema [
@@ -201,6 +203,7 @@ defmodule Sanity do
 
   #{NimbleOptions.docs(@request_options_schema)}
   """
+  @impl true
   @spec request(Request.t(), keyword()) :: {:ok, Response.t()} | {:error, Response.t()}
   def request(
         %Request{body: body, headers: headers, method: method, query_params: query_params} =
@@ -235,6 +238,7 @@ defmodule Sanity do
 
   See `request/2` for supported options.
   """
+  @impl true
   @spec request!(Request.t(), keyword()) :: Response.t()
   def request!(request, opts \\ []) do
     case request(request, opts) do
@@ -299,6 +303,8 @@ defmodule Sanity do
 
   #{NimbleOptions.docs(@stream_options_schema)}
   """
+  @impl true
+  @spec stream(Keyword.t()) :: Enumerable.t()
   def stream(opts) do
     opts =
       opts
