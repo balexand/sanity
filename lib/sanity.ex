@@ -5,6 +5,7 @@ defmodule Sanity do
 
   @behaviour Sanity.Behaviour
 
+  require Logger
   alias Sanity.{Request, Response}
 
   @asset_options_schema [
@@ -47,7 +48,8 @@ defmodule Sanity do
     max_attempts: [
       type: :pos_integer,
       default: 1,
-      doc: "Number of attempts to make before returning error."
+      doc:
+        "Number of attempts to make before returning error. Requests receiving an HTTP status code of 4xx will never be retried."
     ],
     project_id: [
       type: :string,
@@ -217,18 +219,34 @@ defmodule Sanity do
 
     url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
 
-    Finch.build(method, url, headers(opts) ++ headers, body)
-    |> finch_mod.request(Sanity.Finch, http_options)
-    |> case do
-      {:ok, %Finch.Response{body: body, headers: headers, status: status}}
+    result =
+      Finch.build(method, url, headers(opts) ++ headers, body)
+      |> finch_mod.request(Sanity.Finch, http_options)
+
+    case {opts[:max_attempts], result} do
+      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
       when status in 200..299 ->
         {:ok, %Response{body: Jason.decode!(body), headers: headers}}
 
-      {:ok, %Finch.Response{body: body, headers: headers, status: status}}
+      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
       when status in 400..499 ->
         {:error, %Response{body: Jason.decode!(body), headers: headers}}
 
-      {_, error_or_response} ->
+      {max_attempts, {_, error_or_response}} when max_attempts > 1 ->
+        Logger.warn(
+          "retrying failed request in #{opts[:retry_delay]}ms\n#{inspect(error_or_response)}"
+        )
+
+        :timer.sleep(opts[:retry_delay])
+
+        opts =
+          opts
+          |> Keyword.update!(:max_attempts, &(&1 - 1))
+          |> Keyword.update!(:retry_delay, &(&1 * 2))
+
+        request(request, opts)
+
+      {_, {_, error_or_response}} ->
         raise %Sanity.Error{source: error_or_response}
     end
   end
