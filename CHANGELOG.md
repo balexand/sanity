@@ -1,6 +1,12 @@
 # Changelog
 
+# v0.12.0 (2022-10-23)
+
+- Use `2021-10-21` as the default API version.
+- `Sanity.stream/1`, failed request retry via the `:max_attempts` and `:retry_delay` options, and `%Response{status: _}` field ([#63](https://github.com/balexand/sanity/pull/63)).
+
 # v0.11.0 (2022-07-23)
+
 - BREAKING - Remove `Sanity.atomize_and_underscore/1` ([#57](https://github.com/balexand/sanity/pull/57))
 
 # v0.10.0 (2022-07-13)
