@@ -49,7 +49,7 @@ defmodule Sanity do
       type: :pos_integer,
       default: 1,
       doc:
-        "Number of attempts to make before returning error. Requests receiving an HTTP status code of 4xx will never be retried."
+        "Number of attempts to make before returning error. Requests receiving an HTTP status code of 4xx will not be retried."
     ],
     project_id: [
       type: :string,
