@@ -197,7 +197,7 @@ defmodule SanityTest do
       end)
 
       log =
-        ExUnit.CaptureLog.capture_log([level: :warn], fn ->
+        ExUnit.CaptureLog.capture_log(fn ->
           Sanity.query("*")
           |> Sanity.request(Keyword.merge(@request_config, max_attempts: 3, retry_delay: 10))
         end)
@@ -219,7 +219,7 @@ defmodule SanityTest do
       end)
 
       log =
-        ExUnit.CaptureLog.capture_log([level: :warn], fn ->
+        ExUnit.CaptureLog.capture_log(fn ->
           assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
             Sanity.query("*")
             |> Sanity.request(Keyword.merge(@request_config, max_attempts: 2, retry_delay: 5))
