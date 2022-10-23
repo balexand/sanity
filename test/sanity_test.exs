@@ -197,16 +197,16 @@ defmodule SanityTest do
       end)
 
       log =
-        ExUnit.CaptureLog.capture_log(fn ->
+        ExUnit.CaptureLog.capture_log([level: :warn], fn ->
           Sanity.query("*")
           |> Sanity.request(Keyword.merge(@request_config, max_attempts: 3, retry_delay: 10))
         end)
 
       assert log =~
-               ~s'[warning] retrying failed request in 10ms\n%Mint.TransportError{reason: :timeout}'
+               ~s'retrying failed request in 10ms\n%Mint.TransportError{reason: :timeout}'
 
       assert log =~
-               ~s'[warning] retrying failed request in 20ms\n%Finch.Response{status: 500, body: "fail!", headers: []}'
+               ~s'retrying failed request in 20ms\n%Finch.Response{status: 500, body: "fail!", headers: []}'
     end
 
     test "retries and fails" do
@@ -219,7 +219,7 @@ defmodule SanityTest do
       end)
 
       log =
-        ExUnit.CaptureLog.capture_log(fn ->
+        ExUnit.CaptureLog.capture_log([level: :warn], fn ->
           assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
             Sanity.query("*")
             |> Sanity.request(Keyword.merge(@request_config, max_attempts: 2, retry_delay: 5))
@@ -227,7 +227,7 @@ defmodule SanityTest do
         end)
 
       assert log =~
-               ~s'[warning] retrying failed request in 5ms\n%Finch.Response{status: 500, body: "fail!", headers: []}'
+               ~s'retrying failed request in 5ms\n%Finch.Response{status: 500, body: "fail!", headers: []}'
     end
   end
 
