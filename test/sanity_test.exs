@@ -5,7 +5,7 @@ defmodule SanityTest do
   import Mox
   setup :verify_on_exit!
 
-  alias Sanity.{MockFinch, Request, Response}
+  alias Sanity.{MockFinch, MockSanity, Request, Response}
   alias NimbleOptions.ValidationError
 
   @request_config [
@@ -119,7 +119,7 @@ defmodule SanityTest do
         {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
       end)
 
-      assert {:ok, %Response{body: %{}, headers: []}} ==
+      assert {:ok, %Response{body: %{}, headers: [], status: 200}} ==
                Sanity.query("*", var_2: "y")
                |> Sanity.request(@request_config)
     end
@@ -131,7 +131,7 @@ defmodule SanityTest do
         {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
       end)
 
-      assert {:ok, %Response{body: %{}, headers: []}} ==
+      assert {:ok, %Response{body: %{}, headers: [], status: 200}} ==
                Sanity.query("*")
                |> Sanity.request(Keyword.put(@request_config, :cdn, true))
     end
@@ -151,11 +151,9 @@ defmodule SanityTest do
         Sanity.request(query, project_id: 1)
       end
 
-      assert_raise ValidationError,
-                   "required option :dataset not found, received options: [:cdn, :api_version, :finch_mod, :http_options, :project_id, :token]",
-                   fn ->
-                     Sanity.request(query, Keyword.delete(@request_config, :dataset))
-                   end
+      assert_raise ValidationError, ~R{required option :dataset not found}, fn ->
+        Sanity.request(query, Keyword.delete(@request_config, :dataset))
+      end
     end
 
     test "5xx response" do
@@ -184,6 +182,56 @@ defmodule SanityTest do
                      Sanity.query("*") |> Sanity.request(@request_config)
                    end
     end
+
+    test "retries and succeeds" do
+      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+        {:error, %Mint.TransportError{reason: :timeout}}
+      end)
+
+      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+        {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
+      end)
+
+      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+        {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
+      end)
+
+      log =
+        ExUnit.CaptureLog.capture_log([level: :warn], fn ->
+          assert {:ok, %Sanity.Response{body: %{}, headers: [], status: 200}} =
+                   Sanity.query("*")
+                   |> Sanity.request(
+                     Keyword.merge(@request_config, max_attempts: 3, retry_delay: 10)
+                   )
+        end)
+
+      assert log =~
+               ~s'retrying failed request in 10ms\n%Mint.TransportError{reason: :timeout}'
+
+      assert log =~
+               ~s'retrying failed request in 20ms\n%Finch.Response{'
+    end
+
+    test "retries and fails" do
+      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+        {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
+      end)
+
+      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+        {:error, %Mint.TransportError{reason: :timeout}}
+      end)
+
+      log =
+        ExUnit.CaptureLog.capture_log([level: :warn], fn ->
+          assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
+            Sanity.query("*")
+            |> Sanity.request(Keyword.merge(@request_config, max_attempts: 2, retry_delay: 5))
+          end
+        end)
+
+      assert log =~
+               ~s'retrying failed request in 5ms\n%Finch.Response{'
+    end
   end
 
   test "request!" do
@@ -196,10 +244,132 @@ defmodule SanityTest do
     end)
 
     assert_raise Sanity.Error,
-                 "%Sanity.Response{body: %{\"error\" => %{\"description\" => \"The mutation(s) failed...\"}}, headers: []}",
+                 "%Sanity.Response{body: %{\"error\" => %{\"description\" => \"The mutation(s) failed...\"}}, headers: [], status: 409}",
                  fn ->
                    Sanity.mutate([]) |> Sanity.request!(@request_config)
                  end
+  end
+
+  describe "stream" do
+    test "opts[:drafts] == :exclude (default)" do
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" => "*[(!(_id in path('drafts.**')))] | order(_id) [0..999] { ... }"
+               }
+
+        %Response{body: %{"result" => [%{"_id" => "a"}]}}
+      end)
+
+      Sanity.stream(request_module: MockSanity, request_opts: @request_config) |> Enum.to_list()
+    end
+
+    test "opts[:drafts] == :include" do
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" => "*[] | order(_id) [0..999] { ... }"
+               }
+
+        %Response{body: %{"result" => [%{"_id" => "a"}]}}
+      end)
+
+      Sanity.stream(drafts: :include, request_module: MockSanity, request_opts: @request_config)
+      |> Enum.to_list()
+    end
+
+    test "opts[:drafts] == :only" do
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" => "*[(_id in path('drafts.**'))] | order(_id) [0..999] { ... }"
+               }
+
+        %Response{body: %{"result" => [%{"_id" => "a"}]}}
+      end)
+
+      Sanity.stream(drafts: :only, request_module: MockSanity, request_opts: @request_config)
+      |> Enum.to_list()
+    end
+
+    test "opts[:drafts] == :invalid" do
+      assert_raise NimbleOptions.ValidationError,
+                   "expected :drafts to be in [:exclude, :include, :only], got: :invalid",
+                   fn ->
+                     Sanity.stream(drafts: :invalid, request_opts: @request_config)
+                   end
+    end
+
+    test "pagination" do
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" => "*[(!(_id in path('drafts.**')))] | order(_id) [0..4] { ... }"
+               }
+
+        results = Enum.map(1..5, &%{"_id" => "doc-#{&1}"})
+        %Response{body: %{"result" => results}}
+      end)
+
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" =>
+                   "*[(!(_id in path('drafts.**'))) && (_id > $pagination_last_id)] | order(_id) [0..4] { ... }",
+                 "$pagination_last_id" => "\"doc-5\""
+               }
+
+        results = Enum.map(6..8, &%{"_id" => "doc-#{&1}"})
+        %Response{body: %{"result" => results}}
+      end)
+
+      assert Sanity.stream(
+               batch_size: 5,
+               request_module: MockSanity,
+               request_opts: @request_config
+             )
+             |> Enum.to_list() == [
+               %{"_id" => "doc-1"},
+               %{"_id" => "doc-2"},
+               %{"_id" => "doc-3"},
+               %{"_id" => "doc-4"},
+               %{"_id" => "doc-5"},
+               %{"_id" => "doc-6"},
+               %{"_id" => "doc-7"},
+               %{"_id" => "doc-8"}
+             ]
+    end
+
+    test "query, projection, and variables options" do
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, request_opts ->
+        assert query_params == %{
+                 "$type" => "\"page\"",
+                 "query" =>
+                   "*[(_type == $type) && (!(_id in path('drafts.**')))] | order(_id) [0..999] { _id, title }"
+               }
+
+        assert request_opts[:max_attempts] == 3
+
+        %Response{body: %{"result" => [%{"_id" => "a", "title" => "home"}]}}
+      end)
+
+      result =
+        Sanity.stream(
+          projection: "{ _id, title }",
+          query: "_type == $type",
+          request_module: MockSanity,
+          request_opts: @request_config,
+          variables: %{type: "page"}
+        )
+        |> Enum.to_list()
+
+      assert result == [%{"_id" => "a", "title" => "home"}]
+    end
+
+    test "unpermitted variable name" do
+      assert_raise ArgumentError, "variable names not permitted: [:pagination_last_id]", fn ->
+        Sanity.stream(request_opts: @request_config, variables: %{pagination_last_id: ""})
+      end
+
+      assert_raise ArgumentError, "variable names not permitted: [\"pagination_last_id\"]", fn ->
+        Sanity.stream(request_opts: @request_config, variables: %{"pagination_last_id" => ""})
+      end
+    end
   end
 
   test "update_asset" do

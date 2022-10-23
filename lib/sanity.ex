@@ -3,6 +3,9 @@ defmodule Sanity do
   Client library for Sanity CMS. See the [README](readme.html) for examples.
   """
 
+  @behaviour Sanity.Behaviour
+
+  require Logger
   alias Sanity.{Request, Response}
 
   @asset_options_schema [
@@ -34,17 +37,29 @@ defmodule Sanity do
     ],
     finch_mod: [
       type: :atom,
-      doc: false,
-      default: Finch
+      default: Finch,
+      doc: false
     ],
     http_options: [
       type: :keyword_list,
-      doc: "Options to be passed to `Finch.request/3`.",
-      default: [receive_timeout: 30_000]
+      default: [receive_timeout: 30_000],
+      doc: "Options to be passed to `Finch.request/3`."
+    ],
+    max_attempts: [
+      type: :pos_integer,
+      default: 1,
+      doc:
+        "Number of attempts to make before returning error. Requests receiving an HTTP status code of 4xx will not be retried."
     ],
     project_id: [
       type: :string,
       doc: "Sanity project ID."
+    ],
+    retry_delay: [
+      type: :pos_integer,
+      default: 1_000,
+      doc:
+        "Delay in ms to wait before retrying after an error. Applies if `max_attempts` is greater than `1`."
     ],
     token: [
       type: :string,
@@ -174,8 +189,8 @@ defmodule Sanity do
       iex> Sanity.result!(%Sanity.Response{body: %{"result" => []}})
       []
 
-      iex> Sanity.result!(%Sanity.Response{body: %{}})
-      ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil}
+      iex> Sanity.result!(%Sanity.Response{body: %{}, status: 200})
+      ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil, status: 200}
   """
   @spec result!(Response.t()) :: any()
   def result!(%Response{body: %{"result" => result}}), do: result
@@ -190,6 +205,7 @@ defmodule Sanity do
 
   #{NimbleOptions.docs(@request_options_schema)}
   """
+  @impl true
   @spec request(Request.t(), keyword()) :: {:ok, Response.t()} | {:error, Response.t()}
   def request(
         %Request{body: body, headers: headers, method: method, query_params: query_params} =
@@ -203,18 +219,34 @@ defmodule Sanity do
 
     url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
 
-    Finch.build(method, url, headers(opts) ++ headers, body)
-    |> finch_mod.request(Sanity.Finch, http_options)
-    |> case do
-      {:ok, %Finch.Response{body: body, headers: headers, status: status}}
+    result =
+      Finch.build(method, url, headers(opts) ++ headers, body)
+      |> finch_mod.request(Sanity.Finch, http_options)
+
+    case {opts[:max_attempts], result} do
+      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
       when status in 200..299 ->
-        {:ok, %Response{body: Jason.decode!(body), headers: headers}}
+        {:ok, %Response{body: Jason.decode!(body), headers: headers, status: status}}
 
-      {:ok, %Finch.Response{body: body, headers: headers, status: status}}
+      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
       when status in 400..499 ->
-        {:error, %Response{body: Jason.decode!(body), headers: headers}}
+        {:error, %Response{body: Jason.decode!(body), headers: headers, status: status}}
 
-      {_, error_or_response} ->
+      {max_attempts, {_, error_or_response}} when max_attempts > 1 ->
+        Logger.warn(
+          "retrying failed request in #{opts[:retry_delay]}ms\n#{inspect(error_or_response)}"
+        )
+
+        :timer.sleep(opts[:retry_delay])
+
+        opts =
+          opts
+          |> Keyword.update!(:max_attempts, &(&1 - 1))
+          |> Keyword.update!(:retry_delay, &(&1 * 2))
+
+        request(request, opts)
+
+      {_, {_, error_or_response}} ->
         raise %Sanity.Error{source: error_or_response}
     end
   end
@@ -224,6 +256,7 @@ defmodule Sanity do
 
   See `request/2` for supported options.
   """
+  @impl true
   @spec request!(Request.t(), keyword()) :: Response.t()
   def request!(request, opts \\ []) do
     case request(request, opts) do
@@ -231,6 +264,114 @@ defmodule Sanity do
       {:error, %Response{} = response} -> raise %Sanity.Error{source: response}
     end
   end
+
+  @stream_options_schema [
+    batch_size: [
+      type: :pos_integer,
+      default: 1_000,
+      doc:
+        ~S'Number of results to fetch per request. The Sanity docs say: "In the general case, we recommend a batch size of no more than 5,000. If your documents are very large, a smaller batch size is better."'
+    ],
+    drafts: [
+      type: {:in, [:exclude, :include, :only]},
+      default: :exclude,
+      doc:
+        "Use `:exclude` to exclude drafts, `:include` to include drafts along with published docs, or `:only` to fetch drafts and not published documents."
+    ],
+    projection: [
+      type: :string,
+      default: "{ ... }",
+      doc: "GROQ projection. Must include the `_id` field."
+    ],
+    query: [
+      type: :string,
+      doc: ~S'Query string, like `_type == "page"`. By default, all documents will be selected.'
+    ],
+    request_module: [
+      type: :atom,
+      default: __MODULE__,
+      doc: false
+    ],
+    request_opts: [
+      type: :keyword_list,
+      required: true,
+      doc:
+        "Options to be passed to `request/2`. If `max_attempts` is omitted then it will default to `3`."
+    ],
+    variables: [
+      # TODO change type to :map after updating to NimbleOptions 0.5.0
+      type: :any,
+      default: %{},
+      doc: "Map of variables to be used with `query`."
+    ]
+  ]
+
+  @doc """
+  Returns a lazy `Stream` of results for the given query. The implementation is efficient and
+  suitable for iterating over very large datasets. It is based on the [Paginating with
+  GROQ](https://www.sanity.io/docs/paginating-with-groq) article from the Sanity docs.
+
+  Failed attempts to fetch a batch will be retried by default. If the max attempts are exceeded
+  then an exception will be raised as descrbied in `request!/2`.
+
+  The current implementation always sorts by ascending `_id`. Support for sorting by other fields
+  may be supported in the future.
+
+  ## Options
+
+  #{NimbleOptions.docs(@stream_options_schema)}
+  """
+  @impl true
+  @spec stream(Keyword.t()) :: Enumerable.t()
+  def stream(opts) do
+    opts =
+      opts
+      |> NimbleOptions.validate!(@stream_options_schema)
+      |> Keyword.update!(:request_opts, &Keyword.put_new(&1, :max_attempts, 3))
+
+    case Map.take(opts[:variables], [:pagination_last_id, "pagination_last_id"]) |> Map.keys() do
+      [] -> nil
+      keys -> raise ArgumentError, "variable names not permitted: #{inspect(keys)}"
+    end
+
+    Stream.unfold(:first_page, fn
+      :done ->
+        nil
+
+      :first_page ->
+        stream_page(opts, nil)
+
+      last_id ->
+        opts
+        |> Keyword.update!(:variables, &Map.put(&1, :pagination_last_id, last_id))
+        |> stream_page("_id > $pagination_last_id")
+    end)
+    |> Stream.flat_map(& &1)
+  end
+
+  defp stream_page(opts, page_query) do
+    query =
+      [opts[:query], drafts_query(opts[:drafts]), page_query]
+      |> Enum.filter(& &1)
+      |> Enum.map(&"(#{&1})")
+      |> Enum.join(" && ")
+
+    results =
+      "*[#{query}] | order(_id) [0..#{opts[:batch_size] - 1}] #{opts[:projection]}"
+      |> query(opts[:variables])
+      |> opts[:request_module].request!(opts[:request_opts])
+      |> result!()
+
+    if length(results) < opts[:batch_size] do
+      {results, :done}
+    else
+      {results, results |> List.last() |> Map.fetch!("_id")}
+    end
+  end
+
+  defp drafts_query(:exclude), do: "!(_id in path('drafts.**'))"
+  defp drafts_query(:include), do: nil
+  defp drafts_query(:only), do: "_id in path('drafts.**')"
 
   @doc """
   Generates a request for the [asset endpoint](https://www.sanity.io/docs/http-api-assets).
