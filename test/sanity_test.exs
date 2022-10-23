@@ -110,7 +110,7 @@ defmodule SanityTest do
                  headers: [{"authorization", "Bearer supersecret"}],
                  host: "projectx.api.sanity.io",
                  method: "GET",
-                 path: "/v2021-03-25/data/query/myset",
+                 path: "/v2021-10-21/data/query/myset",
                  port: 443,
                  query: "%24var_2=%22y%22&query=%2A",
                  scheme: :https
