@@ -307,7 +307,7 @@ defmodule Sanity do
   ]
 
   @doc """
-  Returns a lazy `Stream` of results for the given query. The implementation is efficient, and
+  Returns a lazy `Stream` of results for the given query. The implementation is efficient and
   suitable for iterating over very large datasets. It is based on the [Paginating with
   GROQ](https://www.sanity.io/docs/paginating-with-groq) article from the Sanity docs.
 
