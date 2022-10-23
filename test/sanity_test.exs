@@ -227,7 +227,7 @@ defmodule SanityTest do
         end)
 
       assert log =~
-               ~s'retrying failed request in 5ms\n%Finch.Response'
+               ~s'retrying failed request in 5ms\n%Finch.Response{status: 500'
     end
   end
 
