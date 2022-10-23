@@ -11,12 +11,10 @@ The package can be installed by adding `sanity` to your list of dependencies in 
 ```elixir
 def deps do
   [
-    {:sanity, "~> 0.11.0"}
+    {:sanity, "~> 0.12"}
   ]
 end
 ```
-
-The docs can be found at [https://hexdocs.pm/sanity](https://hexdocs.pm/sanity/Sanity.html).
 
 ## Examples
 
