@@ -5,7 +5,7 @@ defmodule SanityTest do
   import Mox
   setup :verify_on_exit!
 
-  alias Sanity.{MockFinch, Request, Response}
+  alias Sanity.{MockFinch, MockSanity, Request, Response}
   alias NimbleOptions.ValidationError
 
   @request_config [
@@ -182,6 +182,14 @@ defmodule SanityTest do
                      Sanity.query("*") |> Sanity.request(@request_config)
                    end
     end
+
+    test "retries and succeeds" do
+      # FIXME
+    end
+
+    test "retries and fails" do
+      # FIXME
+    end
   end
 
   test "request!" do
@@ -201,6 +209,81 @@ defmodule SanityTest do
   end
 
   describe "stream" do
+    test "opts[:drafts] == :exclude (default)" do
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" => "*[(!(_id in path('drafts.**')))] | order(_id) [0..999] { ... }"
+               }
+
+        %Response{body: %{"result" => [%{"_id" => "a"}]}}
+      end)
+
+      Sanity.stream(request_module: MockSanity, request_opts: []) |> Enum.to_list()
+    end
+
+    test "opts[:drafts] == :include" do
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" => "*[] | order(_id) [0..999] { ... }"
+               }
+
+        %Response{body: %{"result" => [%{"_id" => "a"}]}}
+      end)
+
+      Sanity.stream(drafts: :include, request_module: MockSanity, request_opts: [])
+      |> Enum.to_list()
+    end
+
+    test "opts[:drafts] == :only" do
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
+        assert query_params == %{
+                 "query" => "*[(_id in path('drafts.**'))] | order(_id) [0..999] { ... }"
+               }
+
+        %Response{body: %{"result" => [%{"_id" => "a"}]}}
+      end)
+
+      Sanity.stream(drafts: :only, request_module: MockSanity, request_opts: []) |> Enum.to_list()
+    end
+
+    test "opts[:drafts] == :invalid" do
+      assert_raise NimbleOptions.ValidationError,
+                   "expected :drafts to be in [:exclude, :include, :only], got: :invalid",
+                   fn ->
+                     Sanity.stream(drafts: :invalid, request_opts: [])
+                   end
+    end
+
+    test "pagination" do
+      # FIXME
+    end
+
+    test "query, projection, and variables options" do
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, request_opts ->
+        assert query_params == %{
+                 "$type" => "\"page\"",
+                 "query" =>
+                   "*[(_type == $type) && (!(_id in path('drafts.**')))] | order(_id) [0..999] { _id, title }"
+               }
+
+        assert request_opts == [max_attempts: 3]
+
+        %Response{body: %{"result" => [%{"_id" => "a", "title" => "home"}]}}
+      end)
+
+      result =
+        Sanity.stream(
+          projection: "{ _id, title }",
+          query: "_type == $type",
+          request_module: MockSanity,
+          request_opts: [],
+          variables: %{type: "page"}
+        )
+        |> Enum.to_list()
+
+      assert result == [%{"_id" => "a", "title" => "home"}]
+    end
+
     test "unpermitted variable name" do
       assert_raise ArgumentError, "variable names not permitted: [:pagination_last_id]", fn ->
         Sanity.stream(request_opts: [], variables: %{pagination_last_id: ""})
@@ -210,11 +293,6 @@ defmodule SanityTest do
         Sanity.stream(request_opts: [], variables: %{"pagination_last_id" => ""})
       end
     end
-  end
-
-  test "stream" do
-    Sanity.stream(request_opts: [])
-    # FIXME
   end
 
   test "update_asset" do
