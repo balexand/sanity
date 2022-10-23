@@ -1,5 +1,5 @@
 defmodule Sanity.Response do
   @type t :: %Sanity.Response{}
 
-  defstruct [:body, :headers]
+  defstruct [:body, :headers, :status]
 end

@@ -190,7 +190,7 @@ defmodule Sanity do
       []
 
       iex> Sanity.result!(%Sanity.Response{body: %{}})
-      ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil}
+      ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil, status: nil}
   """
   @spec result!(Response.t()) :: any()
   def result!(%Response{body: %{"result" => result}}), do: result
@@ -226,11 +226,11 @@ defmodule Sanity do
     case {opts[:max_attempts], result} do
       {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
       when status in 200..299 ->
-        {:ok, %Response{body: Jason.decode!(body), headers: headers}}
+        {:ok, %Response{body: Jason.decode!(body), headers: headers, status: status}}
 
       {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
       when status in 400..499 ->
-        {:error, %Response{body: Jason.decode!(body), headers: headers}}
+        {:error, %Response{body: Jason.decode!(body), headers: headers, status: status}}
 
       {max_attempts, {_, error_or_response}} when max_attempts > 1 ->
         Logger.warn(

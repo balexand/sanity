@@ -119,7 +119,7 @@ defmodule SanityTest do
         {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
       end)
 
-      assert {:ok, %Response{body: %{}, headers: []}} ==
+      assert {:ok, %Response{body: %{}, headers: [], status: 200}} ==
                Sanity.query("*", var_2: "y")
                |> Sanity.request(@request_config)
     end
@@ -131,7 +131,7 @@ defmodule SanityTest do
         {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
       end)
 
-      assert {:ok, %Response{body: %{}, headers: []}} ==
+      assert {:ok, %Response{body: %{}, headers: [], status: 200}} ==
                Sanity.query("*")
                |> Sanity.request(Keyword.put(@request_config, :cdn, true))
     end
@@ -241,7 +241,7 @@ defmodule SanityTest do
     end)
 
     assert_raise Sanity.Error,
-                 "%Sanity.Response{body: %{\"error\" => %{\"description\" => \"The mutation(s) failed...\"}}, headers: []}",
+                 "%Sanity.Response{body: %{\"error\" => %{\"description\" => \"The mutation(s) failed...\"}}, headers: [], status: 409}",
                  fn ->
                    Sanity.mutate([]) |> Sanity.request!(@request_config)
                  end
