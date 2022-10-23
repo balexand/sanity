@@ -256,11 +256,6 @@ defmodule Sanity do
       doc:
         "Use `:exclude` to exclude drafts, `:include` to include drafts along with published docs, or `:only` to fetch drafts and not published documents."
     ],
-    max_attempts: [
-      type: :pos_integer,
-      default: 3,
-      doc: "Number of request attempts to make per batch request. See `request/2`."
-    ],
     projection: [
       type: :string,
       default: "{ ... }",
@@ -300,9 +295,56 @@ defmodule Sanity do
   #{NimbleOptions.docs(@stream_options_schema)}
   """
   def stream(opts) do
-    _opts = NimbleOptions.validate!(opts, @stream_options_schema)
-    # FIXME
+    opts =
+      opts
+      |> NimbleOptions.validate!(@stream_options_schema)
+      |> Keyword.update!(:request_opts, &Keyword.put_new(&1, :max_attempts, 3))
+
+    case Map.take(opts[:variables], [:pagination_last_id, "pagination_last_id"]) |> Map.keys() do
+      [] -> nil
+      keys -> raise ArgumentError, "variable names not permitted: #{inspect(keys)}"
+    end
+
+    Stream.unfold(:first_page, fn
+      :done ->
+        nil
+
+      :first_page ->
+        stream_page(opts, nil)
+
+      last_id ->
+        opts
+        |> Keyword.update!(:variables, &Map.put(&1, :pagination_last_id, last_id))
+        |> stream_page("_id > $pagination_last_id")
+    end)
+    |> Stream.flat_map(& &1)
   end
+
+  defp stream_page(opts, page_query) do
+    query =
+      [opts[:query], drafts_query(opts[:drafts]), page_query]
+      |> Enum.filter(& &1)
+      |> Enum.map(&"(#{&1})")
+      |> Enum.join(" && ")
+
+    results =
+      "*[#{query}] | order(_id) [0..#{opts[:batch_size] - 1}] #{opts[:projection]}"
+      |> query(opts[:variables])
+      |> request!(opts[:request_opts])
+      |> Sanity.result!()
+
+    IO.inspect(length(results))
+
+    if length(results) == opts[:batch_size] do
+      {results, results |> List.last() |> Map.fetch!("_id")}
+    else
+      {results, :done}
+    end
+  end
+
+  defp drafts_query(:exclude), do: "!(_id in path('drafts.**'))"
+  defp drafts_query(:include), do: nil
+  defp drafts_query(:only), do: "_id in path('drafts.**')"
 
   @doc """
   Generates a request for the [asset endpoint](https://www.sanity.io/docs/http-api-assets).

@@ -200,6 +200,18 @@ defmodule SanityTest do
                  end
   end
 
+  describe "stream" do
+    test "unpermitted variable name" do
+      assert_raise ArgumentError, "variable names not permitted: [:pagination_last_id]", fn ->
+        Sanity.stream(request_opts: [], variables: %{pagination_last_id: ""})
+      end
+
+      assert_raise ArgumentError, "variable names not permitted: [\"pagination_last_id\"]", fn ->
+        Sanity.stream(request_opts: [], variables: %{"pagination_last_id" => ""})
+      end
+    end
+  end
+
   test "stream" do
     Sanity.stream(request_opts: [])
     # FIXME
