@@ -23,7 +23,7 @@ defmodule Sanity do
   @request_options_schema [
     api_version: [
       type: :string,
-      default: "v2021-03-25"
+      default: "v2021-10-21"
     ],
     cdn: [
       type: :boolean,
