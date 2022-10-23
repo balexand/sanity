@@ -265,6 +265,11 @@ defmodule Sanity do
       type: :string,
       doc: ~S'Query string, like `_type == "page"`. By default, all documents will be selected.'
     ],
+    request_module: [
+      type: :atom,
+      default: __MODULE__,
+      doc: false
+    ],
     request_opts: [
       type: :keyword_list,
       required: true,
@@ -330,10 +335,8 @@ defmodule Sanity do
     results =
       "*[#{query}] | order(_id) [0..#{opts[:batch_size] - 1}] #{opts[:projection]}"
       |> query(opts[:variables])
-      |> request!(opts[:request_opts])
-      |> Sanity.result!()
-
-    IO.inspect(length(results))
+      |> opts[:request_module].request!(opts[:request_opts])
+      |> result!()
 
     if length(results) == opts[:batch_size] do
       {results, results |> List.last() |> Map.fetch!("_id")}
