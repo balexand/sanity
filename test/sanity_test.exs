@@ -198,8 +198,11 @@ defmodule SanityTest do
 
       log =
         ExUnit.CaptureLog.capture_log([level: :warn], fn ->
-          Sanity.query("*")
-          |> Sanity.request(Keyword.merge(@request_config, max_attempts: 3, retry_delay: 10))
+          assert {:ok, %Sanity.Response{body: %{}, headers: [], status: 200}} =
+                   Sanity.query("*")
+                   |> Sanity.request(
+                     Keyword.merge(@request_config, max_attempts: 3, retry_delay: 10)
+                   )
         end)
 
       assert log =~
