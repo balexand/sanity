@@ -344,10 +344,10 @@ defmodule Sanity do
       |> opts[:request_module].request!(opts[:request_opts])
       |> result!()
 
-    if length(results) == opts[:batch_size] do
-      {results, results |> List.last() |> Map.fetch!("_id")}
-    else
+    if length(results) < opts[:batch_size] do
       {results, :done}
+    else
+      {results, results |> List.last() |> Map.fetch!("_id")}
     end
   end
 
