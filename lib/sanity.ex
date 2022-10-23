@@ -189,8 +189,8 @@ defmodule Sanity do
       iex> Sanity.result!(%Sanity.Response{body: %{"result" => []}})
       []
 
-      iex> Sanity.result!(%Sanity.Response{body: %{}})
-      ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil, status: nil}
+      iex> Sanity.result!(%Sanity.Response{body: %{}, status: 200})
+      ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil, status: 200}
   """
   @spec result!(Response.t()) :: any()
   def result!(%Response{body: %{"result" => result}}), do: result
