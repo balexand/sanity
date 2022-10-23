@@ -209,26 +209,26 @@ defmodule SanityTest do
                ~s'[warning] retrying failed request in 20ms\n%Finch.Response{status: 500, body: "fail!", headers: []}'
     end
 
-    test "retries and fails" do
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
-        {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
-      end)
+    # test "retries and fails" do
+    #   Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+    #     {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
+    #   end)
 
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
-        {:error, %Mint.TransportError{reason: :timeout}}
-      end)
+    #   Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+    #     {:error, %Mint.TransportError{reason: :timeout}}
+    #   end)
 
-      log =
-        ExUnit.CaptureLog.capture_log(fn ->
-          assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
-            Sanity.query("*")
-            |> Sanity.request(Keyword.merge(@request_config, max_attempts: 2, retry_delay: 5))
-          end
-        end)
+    #   log =
+    #     ExUnit.CaptureLog.capture_log(fn ->
+    #       assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
+    #         Sanity.query("*")
+    #         |> Sanity.request(Keyword.merge(@request_config, max_attempts: 2, retry_delay: 5))
+    #       end
+    #     end)
 
-      assert log =~
-               ~s'[warning] retrying failed request in 5ms\n%Finch.Response{status: 500, body: "fail!", headers: []}'
-    end
+    #   assert log =~
+    #            ~s'[warning] retrying failed request in 5ms\n%Finch.Response{status: 500, body: "fail!", headers: []}'
+    # end
   end
 
   test "request!" do
