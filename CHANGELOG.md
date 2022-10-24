@@ -1,53 +1,63 @@
 # Changelog
+All notable changes to this project will be documented in this file.
 
-# v0.12.0 (2022-10-23)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-- Use `2021-10-21` as the default API version.
+## [0.12.0] - 2022-10-23
+### Added
 - `Sanity.stream/1`, failed request retry via the `:max_attempts` and `:retry_delay` options, and `%Response{status: _}` field ([#63](https://github.com/balexand/sanity/pull/63)).
 
-# v0.11.0 (2022-07-23)
+### Changed
+- Use `2021-10-21` as the default API version.
 
+## [0.11.0] - 2022-07-23
+### Changed
 - BREAKING - Remove `Sanity.atomize_and_underscore/1` ([#57](https://github.com/balexand/sanity/pull/57))
 
-# v0.10.0 (2022-07-13)
-
+## [0.10.0] - 2022-07-13
+### Changed
 - Fix bug in `Sanity.replace_references/2` when reference object doesn't have `_type` field
 
-# v0.9.0 (2022-07-13)
-
-- Increase default HTTP receive timeout to 30 seconds
+## [0.9.0] - 2022-07-13
+### Added
 - `Sanity.replace_references/2` ([#54](https://github.com/balexand/sanity/pull/54))
 
-# v0.8.1 (2022-03-12)
+### Changed
+- Increase default HTTP receive timeout to 30 seconds
 
+## [0.8.1] - 2022-03-12
+### Changed
 - Fix doctest format
 
-# v0.8.0 (2022-03-12)
-
+## [0.8.0] - 2022-03-12
+### Added
 - Add `Sanity.atomize_and_underscore/1` ([#48](https://github.com/balexand/sanity/pull/48))
 
-# v0.7.0 (2022-03-12)
-
+## [0.7.0] - 2022-03-12
+### Added
 - Add `Sanity.result!/1` function ([#47](https://github.com/balexand/sanity/pull/47))
+
+### Changed
 - Run dialyzer on CI and update supported Elixir versions ([#46](https://github.com/balexand/sanity/pull/46))
 
-# v0.6.1 (2021-12-15)
-
+## [0.6.1] - 2021-12-15
+### Changed
 - Relax version requirement for `nimble_options` dependency ([#37](https://github.com/balexand/sanity/pull/37))
 
-# v0.6.0 (2021-05-25)
-
+## [0.6.0] - 2021-05-25
+### Changed
 - Drop `get_document` and `get_documents` functions ([#22](https://github.com/balexand/sanity/pull/22))
 - Update matrix of supported Elixir/Erlang versions ([#21](https://github.com/balexand/sanity/pull/21))
 
-## v0.5.0 (2021-05-21)
-
+## [0.5.0] - 2021-05-21
+### Added
 - Support asset uploads ([#20](https://github.com/balexand/sanity/pull/20))
 
-## v0.4.0 (2021-05-06)
-
+## [0.4.0] - 2021-05-06
+### Added
 - Support API versions ([#18](https://github.com/balexand/sanity/pull/18))
 
-## v0.3.0 (2020-12-09)
-
+## [0.3.0] - 2020-12-09
+### Added
 - Initial Release
