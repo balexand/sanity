@@ -234,7 +234,7 @@ defmodule Sanity do
 
       {max_attempts, {_, error_or_response}} when max_attempts > 1 ->
         Logger.warn(
-          "retrying failed request in #{opts[:retry_delay]}ms\n#{inspect(error_or_response)}"
+          "retrying failed request in #{opts[:retry_delay]}ms: #{inspect(error_or_response)}"
         )
 
         :timer.sleep(opts[:retry_delay])

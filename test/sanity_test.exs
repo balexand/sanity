@@ -206,10 +206,10 @@ defmodule SanityTest do
         end)
 
       assert log =~
-               ~s'retrying failed request in 10ms\n%Mint.TransportError{reason: :timeout}'
+               ~s'retrying failed request in 10ms: %Mint.TransportError{reason: :timeout}'
 
       assert log =~
-               ~s'retrying failed request in 20ms\n%Finch.Response{'
+               ~s'retrying failed request in 20ms: %Finch.Response{'
     end
 
     test "retries and fails" do
@@ -230,7 +230,7 @@ defmodule SanityTest do
         end)
 
       assert log =~
-               ~s'retrying failed request in 5ms\n%Finch.Response{'
+               ~s'retrying failed request in 5ms: %Finch.Response{'
     end
   end
 
