@@ -303,6 +303,20 @@ defmodule SanityTest do
                    end
     end
 
+    test "opts[:variables] invalid" do
+      assert_raise NimbleOptions.ValidationError,
+                   "invalid value for :variables option: expected map, got: []",
+                   fn ->
+                     Sanity.stream(request_opts: @request_config, variables: [])
+                   end
+
+      assert_raise NimbleOptions.ValidationError,
+                   ~R{invalid map in :variables option: expected map key to match at least one given type},
+                   fn ->
+                     Sanity.stream(request_opts: @request_config, variables: %{1 => ""})
+                   end
+    end
+
     test "pagination" do
       Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
         assert query_params == %{

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- Configure nimble_options to ensure that `:variables` option for `Sanity.stream/1` is a map with string or atom keys. Requires nimble_options ~> 0.5.
+
 ## [0.12.1] - 2022-11-18
 ### Changed
 - Update warning log message.

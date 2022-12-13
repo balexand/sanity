@@ -299,8 +299,7 @@ defmodule Sanity do
         "Options to be passed to `request/2`. If `max_attempts` is omitted then it will default to `3`."
     ],
     variables: [
-      # TODO change type to :map after updating to NimbleOptions 0.5.0
-      type: :any,
+      type: {:map, {:or, [:atom, :string]}, :any},
       default: %{},
       doc: "Map of variables to be used with `query`."
     ]
