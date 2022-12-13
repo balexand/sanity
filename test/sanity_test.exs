@@ -139,19 +139,25 @@ defmodule SanityTest do
     test "options validations" do
       query = Sanity.query("*")
 
-      assert_raise ValidationError, "expected :dataset to be a string, got: :ok", fn ->
-        Sanity.request(query, dataset: :ok)
-      end
+      assert_raise ValidationError,
+                   "invalid value for :dataset option: expected string, got: :ok",
+                   fn ->
+                     Sanity.request(query, dataset: :ok)
+                   end
 
-      assert_raise ValidationError, "expected :http_options to be a keyword list, got: %{}", fn ->
-        Sanity.request(query, http_options: %{})
-      end
+      assert_raise ValidationError,
+                   "invalid value for :http_options option: expected keyword list, got: %{}",
+                   fn ->
+                     Sanity.request(query, http_options: %{})
+                   end
 
-      assert_raise ValidationError, "expected :project_id to be a string, got: 1", fn ->
-        Sanity.request(query, project_id: 1)
-      end
+      assert_raise ValidationError,
+                   "invalid value for :project_id option: expected string, got: 1",
+                   fn ->
+                     Sanity.request(query, project_id: 1)
+                   end
 
-      assert_raise ValidationError, ~R{required option :dataset not found}, fn ->
+      assert_raise ValidationError, ~R{required :dataset option not found}, fn ->
         Sanity.request(query, Keyword.delete(@request_config, :dataset))
       end
     end
@@ -291,7 +297,7 @@ defmodule SanityTest do
 
     test "opts[:drafts] == :invalid" do
       assert_raise NimbleOptions.ValidationError,
-                   "expected :drafts to be in [:exclude, :include, :only], got: :invalid",
+                   "invalid value for :drafts option: expected one of [:exclude, :include, :only], got: :invalid",
                    fn ->
                      Sanity.stream(drafts: :invalid, request_opts: @request_config)
                    end
@@ -393,7 +399,7 @@ defmodule SanityTest do
            }
 
     assert_raise NimbleOptions.ValidationError,
-                 "expected :asset_type to be in [:image, :file], got: nil",
+                 "invalid value for :asset_type option: expected one of [:image, :file], got: nil",
                  fn ->
                    Sanity.upload_asset("mydata", asset_type: nil)
                  end
