@@ -195,15 +195,17 @@ defmodule SanityTest do
          }}
       end)
 
-      assert Sanity.mutate([]) |> Sanity.request(@request_config) == {
-               :error,
-               %Finch.Response{
+      exception =
+        assert_raise Sanity.Error, fn ->
+          Sanity.query("*") |> Sanity.request(@request_config)
+        end
+
+      assert exception == %Sanity.Error{
+               source: %Finch.Response{
+                 status: 414,
                  body:
                    "<html>\r\n<head><title>414 Request-URI Too Large</title></head>\r\n<body>\r\n<center><h1>414 Request-URI Too Large</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n",
-                 headers: [
-                   {"content-type", "text/html; charset=UTF-8"}
-                 ],
-                 status: 414
+                 headers: [{"content-type", "text/html; charset=UTF-8"}]
                }
              }
     end
