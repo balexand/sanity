@@ -199,7 +199,8 @@ defmodule Sanity do
   @doc """
   Submits a request to the Sanity API. Returns `{:ok, response}` upon success or `{:error,
   response}` if a non-exceptional (4xx) error occurs. A `Sanity.Error` will be raised if an
-  exceptional error, such as a 5xx response code or a network timeout, occurs.
+  exceptional error such as a 5xx response code, a network timeout, or a response containing
+  non-JSON content occurs.
 
   ## Options
 
@@ -228,9 +229,13 @@ defmodule Sanity do
       when status in 200..299 ->
         {:ok, %Response{body: Jason.decode!(body), headers: headers, status: status}}
 
-      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
+      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status} = resp}}
       when status in 400..499 ->
-        {:error, %Response{body: Jason.decode!(body), headers: headers, status: status}}
+        if json_resp?(headers) do
+          {:error, %Response{body: Jason.decode!(body), headers: headers, status: status}}
+        else
+          raise %Sanity.Error{source: resp}
+        end
 
       {max_attempts, {_, error_or_response}} when max_attempts > 1 ->
         Logger.warn(
@@ -249,6 +254,13 @@ defmodule Sanity do
       {_, {_, error_or_response}} ->
         raise %Sanity.Error{source: error_or_response}
     end
+  end
+
+  defp json_resp?(headers) do
+    Enum.any?(headers, fn
+      {"content-type", value} -> String.contains?(value, "application/json")
+      {_name, _value} -> false
+    end)
   end
 
   @doc """
