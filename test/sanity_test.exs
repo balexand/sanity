@@ -162,6 +162,52 @@ defmodule SanityTest do
       end
     end
 
+    test "409 response" do
+      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+        {:ok,
+         %Finch.Response{
+           body: "{\"error\":{\"description\":\"The mutation(s) failed...\"}}",
+           headers: [{"content-type", "application/json; charset=utf-8"}],
+           status: 409
+         }}
+      end)
+
+      assert Sanity.mutate([]) |> Sanity.request(@request_config) == {
+               :error,
+               %Sanity.Response{
+                 body: %{"error" => %{"description" => "The mutation(s) failed..."}},
+                 headers: [{"content-type", "application/json; charset=utf-8"}],
+                 status: 409
+               }
+             }
+    end
+
+    test "414 response" do
+      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+        {:ok,
+         %Finch.Response{
+           status: 414,
+           body:
+             "<html>\r\n<head><title>414 Request-URI Too Large</title></head>\r\n<body>\r\n<center><h1>414 Request-URI Too Large</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n",
+           headers: [
+             {"content-type", "text/html; charset=UTF-8"}
+           ]
+         }}
+      end)
+
+      assert Sanity.mutate([]) |> Sanity.request(@request_config) == {
+               :error,
+               %Finch.Response{
+                 body:
+                   "<html>\r\n<head><title>414 Request-URI Too Large</title></head>\r\n<body>\r\n<center><h1>414 Request-URI Too Large</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n",
+                 headers: [
+                   {"content-type", "text/html; charset=UTF-8"}
+                 ],
+                 status: 414
+               }
+             }
+    end
+
     test "5xx response" do
       Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
         {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
@@ -245,12 +291,13 @@ defmodule SanityTest do
       {:ok,
        %Finch.Response{
          body: "{\"error\":{\"description\":\"The mutation(s) failed...\"}}",
+         headers: [{"content-type", "application/json; charset=utf-8"}],
          status: 409
        }}
     end)
 
     assert_raise Sanity.Error,
-                 "%Sanity.Response{body: %{\"error\" => %{\"description\" => \"The mutation(s) failed...\"}}, headers: [], status: 409}",
+                 ~r'%Sanity.Response{body:',
                  fn ->
                    Sanity.mutate([]) |> Sanity.request!(@request_config)
                  end

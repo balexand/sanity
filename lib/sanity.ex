@@ -228,9 +228,13 @@ defmodule Sanity do
       when status in 200..299 ->
         {:ok, %Response{body: Jason.decode!(body), headers: headers, status: status}}
 
-      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
+      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status} = resp}}
       when status in 400..499 ->
-        {:error, %Response{body: Jason.decode!(body), headers: headers, status: status}}
+        if json_resp?(headers) do
+          {:error, %Response{body: Jason.decode!(body), headers: headers, status: status}}
+        else
+          {:error, resp}
+        end
 
       {max_attempts, {_, error_or_response}} when max_attempts > 1 ->
         Logger.warn(
@@ -251,6 +255,13 @@ defmodule Sanity do
     end
   end
 
+  defp json_resp?(headers) do
+    Enum.any?(headers, fn
+      {"content-type", value} -> String.contains?(value, "application/json")
+      {_name, _value} -> false
+    end)
+  end
+
   @doc """
   Like `request/2`, but raises a `Sanity.Error` instead of returning and error tuple.
 
@@ -261,7 +272,7 @@ defmodule Sanity do
   def request!(request, opts \\ []) do
     case request(request, opts) do
       {:ok, %Response{} = response} -> response
-      {:error, %Response{} = response} -> raise %Sanity.Error{source: response}
+      {:error, response} -> raise %Sanity.Error{source: response}
     end
   end
 
