@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2023-01-11
+### Changed
+- Handle HTML error response (like 414 Request-URI Too Large) (https://github.com/balexand/sanity/pull/69)
+
 ## [1.0.0] - 2022-12-13
 ### Changed
 - Configure nimble_options to ensure that `:variables` option for `Sanity.stream/1` is a map with string or atom keys. Requires nimble_options ~> 0.5.
