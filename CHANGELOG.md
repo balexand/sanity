@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2023-03-11
+### Changed
+- Relax `nimble_options` version requirement
+
 ## [1.1.0] - 2023-01-11
 ### Changed
 - Handle HTML error response (like 414 Request-URI Too Large) (https://github.com/balexand/sanity/pull/69)
