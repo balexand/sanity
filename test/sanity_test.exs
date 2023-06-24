@@ -18,12 +18,11 @@ defmodule SanityTest do
 
   test "mutate" do
     assert %Request{
-             body:
-               "{\"mutations\":[{\"create\":{\"_type\":\"product\",\"title\":\"Test product\"}}]}",
+             body: body,
              endpoint: :mutate,
              method: :post,
              query_params: %{"returnIds" => true}
-           } ==
+           } =
              Sanity.mutate(
                [
                  %{
@@ -35,6 +34,10 @@ defmodule SanityTest do
                ],
                return_ids: true
              )
+
+    assert Jason.decode!(body) == %{
+             "mutations" => [%{"create" => %{"_type" => "product", "title" => "Test product"}}]
+           }
   end
 
   describe "query" do
