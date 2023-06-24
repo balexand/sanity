@@ -238,7 +238,7 @@ defmodule Sanity do
         end
 
       {max_attempts, {_, error_or_response}} when max_attempts > 1 ->
-        Logger.warn(
+        Logger.warning(
           "retrying failed request in #{opts[:retry_delay]}ms: #{inspect(error_or_response)}"
         )
 
