@@ -5,17 +5,19 @@ on: push
 jobs:
   build:
     name: Build and test
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        elixir-version: ["1.14"]
-        otp-version: ["24", "25"]
+        elixir-version: ["1.15"]
+        otp-version: ["25", "26"]
         include:
+          - elixir-version: "1.14"
+            otp-version: "25"
           - elixir-version: "1.13"
-            otp-version: "23"
+            otp-version: "24"
           - elixir-version: "1.12"
-            otp-version: "22"
+            otp-version: "24"
 
     steps:
       - uses: actions/checkout@v2

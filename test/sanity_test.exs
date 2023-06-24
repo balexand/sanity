@@ -18,12 +18,11 @@ defmodule SanityTest do
 
   test "mutate" do
     assert %Request{
-             body:
-               "{\"mutations\":[{\"create\":{\"_type\":\"product\",\"title\":\"Test product\"}}]}",
+             body: body,
              endpoint: :mutate,
              method: :post,
              query_params: %{"returnIds" => true}
-           } ==
+           } =
              Sanity.mutate(
                [
                  %{
@@ -35,6 +34,10 @@ defmodule SanityTest do
                ],
                return_ids: true
              )
+
+    assert Jason.decode!(body) == %{
+             "mutations" => [%{"create" => %{"_type" => "product", "title" => "Test product"}}]
+           }
   end
 
   describe "query" do
@@ -251,7 +254,7 @@ defmodule SanityTest do
       end)
 
       log =
-        ExUnit.CaptureLog.capture_log([level: :warn], fn ->
+        ExUnit.CaptureLog.capture_log([level: :warning], fn ->
           assert {:ok, %Sanity.Response{body: %{}, headers: [], status: 200}} =
                    Sanity.query("*")
                    |> Sanity.request(
@@ -276,7 +279,7 @@ defmodule SanityTest do
       end)
 
       log =
-        ExUnit.CaptureLog.capture_log([level: :warn], fn ->
+        ExUnit.CaptureLog.capture_log([level: :warning], fn ->
           assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
             Sanity.query("*")
             |> Sanity.request(Keyword.merge(@request_config, max_attempts: 2, retry_delay: 5))
