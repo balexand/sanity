@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2023-06-23
+### Changed
+- Fix Elixir 1.15 deprecation warnings (https://github.com/balexand/sanity/pull/71).
+
 ## [1.1.1] - 2023-03-11
 ### Changed
 - Relax `nimble_options` version requirement
