@@ -83,6 +83,44 @@ defmodule Sanity do
   end
 
   @doc """
+  Returns a list of document IDs referenced by a document or list of documents.
+
+  ## Examples
+
+      iex> Sanity.list_references(%{_ref: "abc", _type: "reference"})
+      ["abc"]
+
+      iex> Sanity.list_references([%{"_ref" => "one", "_type" => "reference"}, %{_ref: "two"}, %{"items" => [%{"_ref" => "three"}]}])
+      ["one", "two", "three"]
+
+      iex> Sanity.list_references([%{_ref: "abc", _type: "reference"}])
+      ["abc"]
+
+      iex> Sanity.list_references([%{a: %{_ref: "abc", _type: "reference"}, b: 1}])
+      ["abc"]
+  """
+  def list_references(doc_or_docs) when is_list(doc_or_docs) or is_map(doc_or_docs) do
+    [_list_references(doc_or_docs)] |> List.flatten() |> Enum.uniq()
+  end
+
+  defp _list_references(list) when is_list(list) do
+    Enum.map(list, &_list_references/1)
+  end
+
+  defp _list_references(%{_type: "reference", _ref: ref}), do: ref
+  defp _list_references(%{"_type" => "reference", "_ref" => ref}), do: ref
+
+  # Some Sanity plugins, such as the Mux input plugin, don't include _type field in reference
+  defp _list_references(%{_ref: ref} = m) when not is_map_key(m, :_type), do: ref
+  defp _list_references(%{"_ref" => ref} = m) when not is_map_key(m, "_type"), do: ref
+
+  defp _list_references(%{} = map) do
+    Map.values(map) |> _list_references()
+  end
+
+  defp _list_references(_), do: []
+
+  @doc """
   Generates a request for the [Mutate](https://www.sanity.io/docs/http-mutations) endpoint.
 
   ## Examples
@@ -132,9 +170,8 @@ defmodule Sanity do
   end
 
   @doc """
-  Replaces Sanity references with the referenced document. The input can be a single document or
-  list of documents. References can be deeply nested within the documents. Documents can have
-  either atom or string keys.
+  Replaces Sanity references. The input can be a single document or list of documents. References
+  can be deeply nested within the documents. Documents can have either atom or string keys.
 
   ## Examples
 
