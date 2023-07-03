@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2023-07-03
+### Added
+- `Sanity.list_references/1` (https://github.com/balexand/sanity/pull/72)
+
 ## [1.1.2] - 2023-06-23
 ### Changed
 - Fix Elixir 1.15 deprecation warnings (https://github.com/balexand/sanity/pull/71).
