@@ -103,10 +103,6 @@ defmodule Sanity do
     [_list_references(doc_or_docs)] |> List.flatten() |> Enum.uniq()
   end
 
-  defp _list_references(list) when is_list(list) do
-    Enum.map(list, &_list_references/1)
-  end
-
   defp _list_references(%{_type: "reference", _ref: ref}), do: ref
   defp _list_references(%{"_type" => "reference", "_ref" => ref}), do: ref
 
@@ -114,10 +110,8 @@ defmodule Sanity do
   defp _list_references(%{_ref: ref} = m) when not is_map_key(m, :_type), do: ref
   defp _list_references(%{"_ref" => ref} = m) when not is_map_key(m, "_type"), do: ref
 
-  defp _list_references(%{} = map) do
-    Map.values(map) |> _list_references()
-  end
-
+  defp _list_references(list) when is_list(list), do: Enum.map(list, &_list_references/1)
+  defp _list_references(%{} = map), do: Map.values(map) |> _list_references()
   defp _list_references(_), do: []
 
   @doc """
