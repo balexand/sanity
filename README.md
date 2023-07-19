@@ -35,7 +35,7 @@ Sanity.query(~S'*[_type == "product"]')
 - [x] Doc
 - [ ] Export
 - [ ] History
-- [ ] Listen
+- [ ] ~Listen~ (see https://github.com/balexand/sanity/pull/74)
 - [x] Mutate
 - [ ] Projects
 - [x] Query
