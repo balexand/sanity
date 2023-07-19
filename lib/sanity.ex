@@ -116,22 +116,6 @@ defmodule Sanity do
   defp _list_references(%{} = map), do: Map.values(map) |> _list_references()
   defp _list_references(_), do: []
 
-  @spec listen(String.t(), keyword() | map(), keyword() | map()) :: Request.t()
-  def listen(query, variables \\ %{}, query_params \\ []) do
-    query_params =
-      variables
-      |> stringify_keys()
-      |> Enum.map(fn {k, v} -> {"$#{k}", Jason.encode!(v)} end)
-      |> Enum.into(camelize_params(query_params))
-      |> Map.put("query", query)
-
-    %Request{
-      endpoint: :listen,
-      method: :get,
-      query_params: query_params
-    }
-  end
-
   @doc """
   Generates a request for the [Mutate](https://www.sanity.io/docs/http-mutations) endpoint.
 
