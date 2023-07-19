@@ -477,20 +477,17 @@ defmodule Sanity do
   defp camelize_params(pairs) do
     pairs
     |> stringify_keys()
-    |> Enum.map(fn {k, v} ->
+    |> Map.new(fn {k, v} ->
       {first, rest} = k |> Macro.camelize() |> String.split_at(1)
       {String.downcase(first) <> rest, v}
     end)
-    |> Map.new()
   end
 
   defp stringify_keys(pairs) do
-    pairs
-    |> Enum.map(fn
+    Map.new(pairs, fn
       {k, v} when is_binary(k) -> {k, v}
       {k, v} when is_atom(k) -> {Atom.to_string(k), v}
     end)
-    |> Map.new()
   end
 
   defp url_for(%Request{endpoint: :assets, path_params: %{asset_type: asset_type}}, opts) do
