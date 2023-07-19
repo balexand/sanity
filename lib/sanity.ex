@@ -174,6 +174,7 @@ defmodule Sanity do
     }
   end
 
+  # Useful when implementing listen. See https://github.com/balexand/sanity/pull/74.
   @doc false
   def query_to_query_params(query, variables, query_params) do
     variables
