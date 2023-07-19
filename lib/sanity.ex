@@ -151,18 +151,21 @@ defmodule Sanity do
   """
   @spec query(String.t(), keyword() | map(), keyword() | map()) :: Request.t()
   def query(query, variables \\ %{}, query_params \\ []) do
-    query_params =
-      variables
-      |> stringify_keys()
-      |> Enum.map(fn {k, v} -> {"$#{k}", Jason.encode!(v)} end)
-      |> Enum.into(camelize_params(query_params))
-      |> Map.put("query", query)
-
     %Request{
       endpoint: :query,
       method: :get,
-      query_params: query_params
+      query_params: query_to_query_params(query, variables, query_params)
     }
+  end
+
+  # Useful when implementing listen. See https://github.com/balexand/sanity/pull/74.
+  @doc false
+  def query_to_query_params(query, variables, query_params) do
+    variables
+    |> stringify_keys()
+    |> Enum.map(fn {k, v} -> {"$#{k}", Jason.encode!(v)} end)
+    |> Enum.into(camelize_params(query_params))
+    |> Map.put("query", query)
   end
 
   @doc """
