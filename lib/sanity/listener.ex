@@ -113,19 +113,3 @@ defmodule Sanity.Listener do
     end
   end
 end
-
-# %Finch.Request{
-#   scheme: :https,
-#   host: "bk3avs8r.api.sanity.io",
-#   port: 443,
-#   method: "GET",
-#   path: "/v2021-10-21/data/query/production",
-#   headers: [
-#     {"authorization",
-#      "Bearer skAeidT0U9IBQHhERj4rj8EQ1AxgaFrfQTaZ8MPyJbmc5uJCNbIxQHpz4AeZppEFh3VYdYczqIaf3gY2131SPiBKMtAt0KBuJPObFnSsNT3viaJb5w3EwT6Gywyl7yWkEGFN341maqW5ztNcM6mCHOeSJvmt1K2JwGnFm9hXUyBzS2j1740L"}
-#   ],
-#   body: nil,
-#   query: "query=_id+in+%5B%220ab67b1e-67dd-4bcb-9b22-c7a3d51649b4%22%2C+%22drafts.0ab67b1e-67dd-4bcb-9b22-c7a3d51649b4%22%5D",
-#   unix_socket: nil,
-#   private: %{}
-# }
