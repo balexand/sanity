@@ -145,19 +145,23 @@ defmodule SanityTest do
       assert_raise ValidationError,
                    "invalid value for :dataset option: expected string, got: :ok",
                    fn ->
-                     Sanity.request(query, dataset: :ok)
+                     Sanity.request(query, dataset: :ok, project_id: "abc")
                    end
 
       assert_raise ValidationError,
                    "invalid value for :http_options option: expected keyword list, got: %{}",
                    fn ->
-                     Sanity.request(query, http_options: %{})
+                     Sanity.request(query,
+                       dataset: "production",
+                       http_options: %{},
+                       project_id: "abc"
+                     )
                    end
 
       assert_raise ValidationError,
                    "invalid value for :project_id option: expected string, got: 1",
                    fn ->
-                     Sanity.request(query, project_id: 1)
+                     Sanity.request(query, dataset: "production", project_id: 1)
                    end
 
       assert_raise ValidationError, ~R{required :dataset option not found}, fn ->
