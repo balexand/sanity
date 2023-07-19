@@ -458,17 +458,6 @@ defmodule Sanity do
     }
   end
 
-  defp base_url(opts) do
-    domain =
-      if Keyword.get(opts, :cdn) do
-        "apicdn.sanity.io"
-      else
-        "api.sanity.io"
-      end
-
-    "https://#{opts[:project_id]}.#{domain}"
-  end
-
   defp headers(opts) do
     case Keyword.fetch(opts, :token) do
       {:ok, token} -> [{"authorization", "Bearer #{token}"}]
@@ -490,6 +479,17 @@ defmodule Sanity do
       {k, v} when is_binary(k) -> {k, v}
       {k, v} when is_atom(k) -> {Atom.to_string(k), v}
     end)
+  end
+
+  defp base_url(opts) do
+    domain =
+      if Keyword.get(opts, :cdn) do
+        "apicdn.sanity.io"
+      else
+        "api.sanity.io"
+      end
+
+    "https://#{opts[:project_id]}.#{domain}"
   end
 
   defp url_for(%Request{endpoint: :assets, path_params: %{asset_type: asset_type}}, opts) do
