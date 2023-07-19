@@ -36,10 +36,12 @@ defmodule Sanity.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:finch, "~> 0.5"},
       {:jason, "~> 1.2"},
       {:nimble_options, "~> 0.5 or ~> 1.0"},
+
+      # dev/test
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:mox, ">= 1.0.0", only: :test}
     ]
