@@ -33,7 +33,8 @@ defmodule Sanity do
     ],
     dataset: [
       type: :string,
-      doc: "Sanity dataset."
+      doc: "Sanity dataset.",
+      required: true
     ],
     finch_mod: [
       type: :atom,
@@ -53,7 +54,8 @@ defmodule Sanity do
     ],
     project_id: [
       type: :string,
-      doc: "Sanity project ID."
+      doc: "Sanity project ID.",
+      required: true
     ],
     retry_delay: [
       type: :pos_integer,
@@ -464,7 +466,7 @@ defmodule Sanity do
         "api.sanity.io"
       end
 
-    "https://#{request_opt!(opts, :project_id)}.#{domain}"
+    "https://#{opts[:project_id]}.#{domain}"
   end
 
   defp headers(opts) do
@@ -491,37 +493,18 @@ defmodule Sanity do
   end
 
   defp url_for(%Request{endpoint: :assets, path_params: %{asset_type: asset_type}}, opts) do
-    api_version = request_opt!(opts, :api_version)
-    dataset = request_opt!(opts, :dataset)
-
-    "#{base_url(opts)}/#{api_version}/assets/#{asset_type}s/#{dataset}"
+    "#{base_url(opts)}/#{opts[:api_version]}/assets/#{asset_type}s/#{opts[:dataset]}"
   end
 
   defp url_for(%Request{endpoint: :doc, path_params: %{document_id: document_id}}, opts) do
-    api_version = request_opt!(opts, :api_version)
-    dataset = request_opt!(opts, :dataset)
-
-    "#{base_url(opts)}/#{api_version}/data/doc/#{dataset}/#{document_id}"
+    "#{base_url(opts)}/#{opts[:api_version]}/data/doc/#{opts[:dataset]}/#{document_id}"
   end
 
   defp url_for(%Request{endpoint: :mutate}, opts) do
-    api_version = request_opt!(opts, :api_version)
-    dataset = request_opt!(opts, :dataset)
-
-    "#{base_url(opts)}/#{api_version}/data/mutate/#{dataset}"
+    "#{base_url(opts)}/#{opts[:api_version]}/data/mutate/#{opts[:dataset]}"
   end
 
   defp url_for(%Request{endpoint: :query}, opts) do
-    api_version = request_opt!(opts, :api_version)
-    dataset = request_opt!(opts, :dataset)
-
-    "#{base_url(opts)}/#{api_version}/data/query/#{dataset}"
-  end
-
-  defp request_opt!(opts, key) do
-    schema = Keyword.update!(@request_options_schema, key, &Keyword.put(&1, :required, true))
-    NimbleOptions.validate!(opts, schema)
-
-    Keyword.fetch!(opts, key)
+    "#{base_url(opts)}/#{opts[:api_version]}/data/query/#{opts[:dataset]}"
   end
 end
