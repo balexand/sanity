@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2023-07-19
+### Changed
+- Refactor and add `Sanity.query_to_query_params/3` (https://github.com/balexand/sanity/pull/73 and https://github.com/balexand/sanity/pull/75)
+
 ## [1.2.0] - 2023-07-03
 ### Added
 - `Sanity.list_references/1` (https://github.com/balexand/sanity/pull/72)
