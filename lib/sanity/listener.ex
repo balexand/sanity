@@ -62,6 +62,8 @@ defmodule Sanity.Listener do
         end,
         receive_timeout: 60_000
       )
+
+      exit({:shutdown, "stream ended"})
     end)
   end
 
