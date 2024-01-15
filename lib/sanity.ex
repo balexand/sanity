@@ -36,6 +36,19 @@ defmodule Sanity do
       doc: "Sanity dataset.",
       required: true
     ],
+    perspective: [
+      type: :string,
+      required: false,
+      doc: """
+        Optional `perspective` param. Controls whether drafts are returned or not.
+
+        Supported values are `raw`, `previewDrafts`, and `published`.
+
+        The `previewDrafts` perspective should only be used with `cdn: false`.
+
+        If the option is not set then the query acts the same as `raw`.
+      """
+    ],
     finch_mod: [
       type: :atom,
       default: Finch,
@@ -254,7 +267,7 @@ defmodule Sanity do
     finch_mod = Keyword.fetch!(opts, :finch_mod)
     http_options = Keyword.fetch!(opts, :http_options)
 
-    url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
+    url = "#{url_for(request, opts)}?#{query_params_for(request, query_params, opts)}"
 
     result =
       Finch.build(method, url, headers(opts) ++ headers, body)
@@ -509,5 +522,21 @@ defmodule Sanity do
 
   defp url_for(%Request{endpoint: :query}, opts) do
     "#{base_url(opts)}/#{opts[:api_version]}/data/query/#{opts[:dataset]}"
+  end
+
+  defp query_params_for(%Request{endpoint: :query}, query_params, opts) do
+    case Keyword.get(opts, :perspective) do
+      nil ->
+        URI.encode_query(query_params)
+
+      perspective ->
+        query_params
+        |> Map.put_new(:perspective, perspective)
+        |> URI.encode_query()
+    end
+  end
+
+  defp query_params_for(_request, query_params, _opts) do
+    URI.encode_query(query_params)
   end
 end
