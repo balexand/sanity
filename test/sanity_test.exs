@@ -164,7 +164,7 @@ defmodule SanityTest do
                      Sanity.request(query, dataset: "production", project_id: 1)
                    end
 
-      assert_raise ValidationError, ~R{required :dataset option not found}, fn ->
+      assert_raise ValidationError, ~r{required :dataset option not found}, fn ->
         Sanity.request(query, Keyword.delete(@request_config, :dataset))
       end
     end
@@ -223,7 +223,7 @@ defmodule SanityTest do
       end)
 
       exception =
-        assert_raise Sanity.Error, ~R'%Finch.Response{', fn ->
+        assert_raise Sanity.Error, ~r'%Finch.Response{', fn ->
           Sanity.query("*") |> Sanity.request(@request_config)
         end
 
@@ -367,7 +367,7 @@ defmodule SanityTest do
                    end
 
       assert_raise NimbleOptions.ValidationError,
-                   ~R{invalid map in :variables option: expected map key to match at least one given type},
+                   ~r{invalid map in :variables option: expected map key to match at least one given type},
                    fn ->
                      Sanity.stream(request_opts: @request_config, variables: %{1 => ""})
                    end
