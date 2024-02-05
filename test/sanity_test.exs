@@ -139,6 +139,27 @@ defmodule SanityTest do
                |> Sanity.request(Keyword.put(@request_config, :cdn, true))
     end
 
+    test "with perspective set" do
+      Mox.expect(MockFinch, :request, fn request, Sanity.Finch, [receive_timeout: 1] ->
+        assert %Finch.Request{
+                 body: nil,
+                 headers: [{"authorization", "Bearer supersecret"}],
+                 host: "projectx.api.sanity.io",
+                 method: "GET",
+                 path: "/v2021-10-21/data/query/myset",
+                 port: 443,
+                 query: "perspective=published&query=%2A",
+                 scheme: :https
+               } == request
+
+        {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
+      end)
+
+      assert {:ok, %Response{body: %{}, headers: [], status: 200}} ==
+               Sanity.query("*")
+               |> Sanity.request(@request_config |> Keyword.put_new(:perspective, "published"))
+    end
+
     test "options validations" do
       query = Sanity.query("*")
 
