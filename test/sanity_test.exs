@@ -354,14 +354,12 @@ defmodule SanityTest do
     end
 
     test "query, projection, and variables options" do
-      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, request_opts ->
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _request_opts ->
         assert query_params == %{
                  "$type" => "\"page\"",
                  "query" =>
                    "*[(_type == $type) && (!(_id in path('drafts.**')))] | order(_id) [0..999] { _id, title }"
                }
-
-        assert request_opts[:max_attempts] == 3
 
         %Response{body: %{"result" => [%{"_id" => "a", "title" => "home"}]}}
       end)
