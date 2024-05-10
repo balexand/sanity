@@ -36,6 +36,7 @@ defmodule Sanity do
       doc: "Sanity dataset.",
       required: true
     ],
+    # FIXME
     finch_mod: [
       type: :atom,
       default: Finch,
@@ -44,7 +45,7 @@ defmodule Sanity do
     http_options: [
       type: :keyword_list,
       default: [receive_timeout: 30_000],
-      doc: "Options to be passed to `Finch.request/3`."
+      doc: "Options to be passed to `Req.request/2`."
     ],
     max_attempts: [
       type: :pos_integer,
@@ -56,6 +57,11 @@ defmodule Sanity do
       type: :string,
       doc: "Sanity project ID.",
       required: true
+    ],
+    req_mod: [
+      type: :atom,
+      default: Req,
+      doc: false
     ],
     retry_delay: [
       type: :pos_integer,
@@ -251,26 +257,25 @@ defmodule Sanity do
       ) do
     opts = NimbleOptions.validate!(opts, @request_options_schema)
 
-    finch_mod = Keyword.fetch!(opts, :finch_mod)
-    http_options = Keyword.fetch!(opts, :http_options)
-
-    url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
-
     result =
-      Finch.build(method, url, headers(opts) ++ headers, body)
-      |> finch_mod.request(Sanity.Finch, http_options)
+      Keyword.merge(Keyword.fetch!(opts, :http_options),
+        body: body,
+        headers: headers(opts) ++ headers,
+        method: method,
+        url: "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
+      )
+      |> Keyword.fetch!(opts, :req_mod).request()
 
     case {opts[:max_attempts], result} do
-      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
+      {_, {:ok, %Req.Response{body: body, headers: headers, status: status}}}
       when status in 200..299 ->
-        {:ok, %Response{body: Jason.decode!(body), headers: headers, status: status}}
+        {:ok, %Response{body: body, headers: headers, status: status}}
 
-      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status} = resp}}
+      {_, {:ok, %Req.Response{body: body, headers: headers, status: status} = resp}}
       when status in 400..499 ->
-        if json_resp?(headers) do
-          {:error, %Response{body: Jason.decode!(body), headers: headers, status: status}}
-        else
-          raise %Sanity.Error{source: resp}
+        case body do
+          %{} -> {:error, %Response{body: body, headers: headers, status: status}}
+          _ -> raise %Sanity.Error{source: resp}
         end
 
       {max_attempts, {_, error_or_response}} when max_attempts > 1 ->
@@ -290,13 +295,6 @@ defmodule Sanity do
       {_, {_, error_or_response}} ->
         raise %Sanity.Error{source: error_or_response}
     end
-  end
-
-  defp json_resp?(headers) do
-    Enum.any?(headers, fn
-      {"content-type", value} -> String.contains?(value, "application/json")
-      {_name, _value} -> false
-    end)
   end
 
   @doc """
