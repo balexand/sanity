@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- (BREAKING) Switch HTTP client from `finch` to `req` (https://github.com/balexand/sanity/pull/81). This introduces the following breaking changes:
+  - The `headers` field of the `Sanity.Response` now returns a map instead of a list of tuples. See https://hexdocs.pm/req/changelog.html#change-headers-to-be-maps for details.
+  - The `:max_attempts` and `:retry_delay` options have been removed from `Sanity.request/2`. `Req` handles retries for us.
+  - The `source` field in the `Sanity.Error` exception may now contain a `Req.Response` struct instead of a `Finch.Response`.
 
 ## [1.3.0] - 2023-07-19
 ### Changed
