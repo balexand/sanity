@@ -128,7 +128,7 @@ defmodule Sanity.MutateIntegrationTest do
   end
 
   test "timeout error", %{config: config} do
-    config = Keyword.put(config, :http_options, receive_timeout: 1, retry_log_level: false)
+    config = Keyword.put(config, :http_options, receive_timeout: 0, retry_log_level: false)
 
     assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
       Sanity.query(~S<{"hello": "world"}>)
