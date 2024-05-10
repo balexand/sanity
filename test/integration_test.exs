@@ -127,6 +127,24 @@ defmodule Sanity.MutateIntegrationTest do
              |> Sanity.request(Keyword.put(config, :cdn, true))
   end
 
+  test "stream", %{config: config} do
+    type = "streamItem#{:rand.uniform(1_000_000)}"
+
+    Sanity.mutate(Enum.map(1..5, &%{create: %{_type: type, title: "item #{&1}"}}))
+    |> Sanity.request(config)
+
+    assert [
+             %{"title" => "item 1"},
+             %{"title" => "item 2"},
+             %{"title" => "item 3"},
+             %{"title" => "item 4"},
+             %{"title" => "item 5"}
+           ] =
+             Sanity.stream(query: "_type == '#{type}'", batch_size: 2, request_opts: config)
+             |> Enum.to_list()
+             |> Enum.sort_by(& &1["title"])
+  end
+
   test "timeout error", %{config: config} do
     config = Keyword.put(config, :http_options, receive_timeout: 0, retry_log_level: false)
 
