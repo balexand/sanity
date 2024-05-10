@@ -39,7 +39,7 @@ defmodule Sanity do
     http_options: [
       type: :keyword_list,
       default: [receive_timeout: 30_000],
-      doc: "Options to be passed to `Req.request/2`."
+      doc: "Options to be passed to `Req.request/1`."
     ],
     project_id: [
       type: :string,
