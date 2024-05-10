@@ -36,32 +36,20 @@ defmodule Sanity do
       doc: "Sanity dataset.",
       required: true
     ],
-    finch_mod: [
-      type: :atom,
-      default: Finch,
-      doc: false
-    ],
     http_options: [
       type: :keyword_list,
       default: [receive_timeout: 30_000],
-      doc: "Options to be passed to `Finch.request/3`."
-    ],
-    max_attempts: [
-      type: :pos_integer,
-      default: 1,
-      doc:
-        "Number of attempts to make before returning error. Requests receiving an HTTP status code of 4xx will not be retried."
+      doc: "Options to be passed to `Req.request/2`."
     ],
     project_id: [
       type: :string,
       doc: "Sanity project ID.",
       required: true
     ],
-    retry_delay: [
-      type: :pos_integer,
-      default: 1_000,
-      doc:
-        "Delay in ms to wait before retrying after an error. Applies if `max_attempts` is greater than `1`."
+    req_mod: [
+      type: :atom,
+      default: Req,
+      doc: false
     ],
     token: [
       type: :string,
@@ -226,7 +214,7 @@ defmodule Sanity do
       []
 
       iex> Sanity.result!(%Sanity.Response{body: %{}, status: 200})
-      ** (Sanity.Error) %Sanity.Response{body: %{}, headers: nil, status: 200}
+      ** (Sanity.Error) %Sanity.Response{body: %{}, headers: %{}, status: 200}
   """
   @spec result!(Response.t()) :: any()
   def result!(%Response{body: %{"result" => result}}), do: result
@@ -251,52 +239,25 @@ defmodule Sanity do
       ) do
     opts = NimbleOptions.validate!(opts, @request_options_schema)
 
-    finch_mod = Keyword.fetch!(opts, :finch_mod)
-    http_options = Keyword.fetch!(opts, :http_options)
-
-    url = "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
-
-    result =
-      Finch.build(method, url, headers(opts) ++ headers, body)
-      |> finch_mod.request(Sanity.Finch, http_options)
-
-    case {opts[:max_attempts], result} do
-      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status}}}
+    Keyword.merge(Keyword.fetch!(opts, :http_options),
+      body: body,
+      headers: headers(opts) ++ headers,
+      method: method,
+      url: "#{url_for(request, opts)}?#{URI.encode_query(query_params)}"
+    )
+    |> Keyword.fetch!(opts, :req_mod).request()
+    |> case do
+      {:ok, %Req.Response{body: body, headers: headers, status: status}}
       when status in 200..299 ->
-        {:ok, %Response{body: Jason.decode!(body), headers: headers, status: status}}
+        {:ok, %Response{body: body, headers: headers, status: status}}
 
-      {_, {:ok, %Finch.Response{body: body, headers: headers, status: status} = resp}}
+      {:ok, %Req.Response{body: %{} = body, headers: headers, status: status}}
       when status in 400..499 ->
-        if json_resp?(headers) do
-          {:error, %Response{body: Jason.decode!(body), headers: headers, status: status}}
-        else
-          raise %Sanity.Error{source: resp}
-        end
+        {:error, %Response{body: body, headers: headers, status: status}}
 
-      {max_attempts, {_, error_or_response}} when max_attempts > 1 ->
-        Logger.warning(
-          "retrying failed request in #{opts[:retry_delay]}ms: #{inspect(error_or_response)}"
-        )
-
-        :timer.sleep(opts[:retry_delay])
-
-        opts =
-          opts
-          |> Keyword.update!(:max_attempts, &(&1 - 1))
-          |> Keyword.update!(:retry_delay, &(&1 * 2))
-
-        request(request, opts)
-
-      {_, {_, error_or_response}} ->
+      {_, error_or_response} ->
         raise %Sanity.Error{source: error_or_response}
     end
-  end
-
-  defp json_resp?(headers) do
-    Enum.any?(headers, fn
-      {"content-type", value} -> String.contains?(value, "application/json")
-      {_name, _value} -> false
-    end)
   end
 
   @doc """
@@ -343,8 +304,7 @@ defmodule Sanity do
     request_opts: [
       type: :keyword_list,
       required: true,
-      doc:
-        "Options to be passed to `request/2`. If `max_attempts` is omitted then it will default to `3`."
+      doc: "Options to be passed to `request/2`."
     ],
     variables: [
       type: {:map, {:or, [:atom, :string]}, :any},
@@ -371,10 +331,7 @@ defmodule Sanity do
   @impl true
   @spec stream(Keyword.t()) :: Enumerable.t()
   def stream(opts) do
-    opts =
-      opts
-      |> NimbleOptions.validate!(@stream_options_schema)
-      |> Keyword.update!(:request_opts, &Keyword.put_new(&1, :max_attempts, 3))
+    opts = NimbleOptions.validate!(opts, @stream_options_schema)
 
     case Map.take(opts[:variables], [:pagination_last_id, "pagination_last_id"]) |> Map.keys() do
       [] -> nil

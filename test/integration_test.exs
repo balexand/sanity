@@ -37,7 +37,11 @@ defmodule Sanity.MutateIntegrationTest do
       )
       |> Sanity.request(config)
 
-    assert {:ok, %Response{body: %{"documents" => [%{"title" => "product x"}]}}} =
+    assert {:ok,
+            %Response{
+              body: %{"documents" => [%{"title" => "product x"}]},
+              headers: %{"content-type" => ["application/json; charset=utf-8"]}
+            }} =
              Sanity.doc(id) |> Sanity.request(config)
   end
 

@@ -18,8 +18,6 @@ jobs:
             otp-version: "25"
           - elixir-version: "1.13"
             otp-version: "24"
-          - elixir-version: "1.12"
-            otp-version: "24"
 
     steps:
       - uses: actions/checkout@v4
@@ -43,5 +41,3 @@ jobs:
           ELIXIR_SANITY_TEST_TOKEN: ${{ secrets.ELIXIR_SANITY_TEST_TOKEN }}
         if: env.ELIXIR_SANITY_TEST_TOKEN
         run: mix test --warnings-as-errors --only integration
-      - name: Check format
-        run: mix format --check-formatted

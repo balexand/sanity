@@ -5,14 +5,14 @@ defmodule SanityTest do
   import Mox
   setup :verify_on_exit!
 
-  alias Sanity.{MockFinch, MockSanity, Request, Response}
+  alias Sanity.{MockReq, MockSanity, Request, Response}
   alias NimbleOptions.ValidationError
 
   @request_config [
     dataset: "myset",
-    finch_mod: MockFinch,
     http_options: [receive_timeout: 1],
     project_id: "projectx",
+    req_mod: MockReq,
     token: "supersecret"
   ]
 
@@ -107,34 +107,33 @@ defmodule SanityTest do
 
   describe "request" do
     test "with query" do
-      Mox.expect(MockFinch, :request, fn request, Sanity.Finch, [receive_timeout: 1] ->
-        assert %Finch.Request{
+      Mox.expect(MockReq, :request, fn opts ->
+        assert Enum.sort(opts) == [
                  body: nil,
                  headers: [{"authorization", "Bearer supersecret"}],
-                 host: "projectx.api.sanity.io",
-                 method: "GET",
-                 path: "/v2021-10-21/data/query/myset",
-                 port: 443,
-                 query: "%24var_2=%22y%22&query=%2A",
-                 scheme: :https
-               } == request
+                 method: :get,
+                 receive_timeout: 1,
+                 url:
+                   "https://projectx.api.sanity.io/v2021-10-21/data/query/myset?%24var_2=%22y%22&query=%2A"
+               ]
 
-        {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
+        {:ok, %Req.Response{body: %{}, headers: %{}, status: 200}}
       end)
 
-      assert {:ok, %Response{body: %{}, headers: [], status: 200}} ==
+      assert {:ok, %Response{body: %{}, headers: %{}, status: 200}} ==
                Sanity.query("*", var_2: "y")
                |> Sanity.request(@request_config)
     end
 
     test "with CDN URL" do
-      Mox.expect(MockFinch, :request, fn %Finch.Request{host: "projectx.apicdn.sanity.io"},
-                                         Sanity.Finch,
-                                         _ ->
-        {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
+      Mox.expect(MockReq, :request, fn opts ->
+        assert Keyword.fetch!(opts, :url) ==
+                 "https://projectx.apicdn.sanity.io/v2021-10-21/data/query/myset?query=%2A"
+
+        {:ok, %Req.Response{body: %{}, headers: %{}, status: 200}}
       end)
 
-      assert {:ok, %Response{body: %{}, headers: [], status: 200}} ==
+      assert {:ok, %Response{body: %{}, headers: %{}, status: 200}} ==
                Sanity.query("*")
                |> Sanity.request(Keyword.put(@request_config, :cdn, true))
     end
@@ -170,11 +169,10 @@ defmodule SanityTest do
     end
 
     test "409 response" do
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+      Mox.expect(MockReq, :request, fn _opts ->
         {:ok,
-         %Finch.Response{
-           body: "{\"error\":{\"description\":\"The mutation(s) failed...\"}}",
-           headers: [{"content-type", "application/json; charset=utf-8"}],
+         %Req.Response{
+           body: %{"error" => %{"description" => "The mutation(s) failed..."}},
            status: 409
          }}
       end)
@@ -183,22 +181,18 @@ defmodule SanityTest do
                :error,
                %Sanity.Response{
                  body: %{"error" => %{"description" => "The mutation(s) failed..."}},
-                 headers: [{"content-type", "application/json; charset=utf-8"}],
                  status: 409
                }
              }
     end
 
     test "414 response" do
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+      Mox.expect(MockReq, :request, fn _ ->
         {:ok,
-         %Finch.Response{
+         %Req.Response{
            status: 414,
            body:
-             "<html>\r\n<head><title>414 Request-URI Too Large</title></head>\r\n<body>\r\n<center><h1>414 Request-URI Too Large</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n",
-           headers: [
-             {"content-type", "text/html; charset=UTF-8"}
-           ]
+             "<html>\r\n<head><title>414 Request-URI Too Large</title></head>\r\n<body>\r\n<center><h1>414 Request-URI Too Large</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n"
          }}
       end)
 
@@ -208,32 +202,31 @@ defmodule SanityTest do
         end
 
       assert exception == %Sanity.Error{
-               source: %Finch.Response{
+               source: %Req.Response{
                  status: 414,
                  body:
-                   "<html>\r\n<head><title>414 Request-URI Too Large</title></head>\r\n<body>\r\n<center><h1>414 Request-URI Too Large</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n",
-                 headers: [{"content-type", "text/html; charset=UTF-8"}]
+                   "<html>\r\n<head><title>414 Request-URI Too Large</title></head>\r\n<body>\r\n<center><h1>414 Request-URI Too Large</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n"
                }
              }
     end
 
     test "5xx response" do
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
-        {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
+      Mox.expect(MockReq, :request, fn _ ->
+        {:ok, %Req.Response{body: "fail!", headers: %{}, status: 500}}
       end)
 
       exception =
-        assert_raise Sanity.Error, ~r'%Finch.Response{', fn ->
+        assert_raise Sanity.Error, ~r'#Req.Response<', fn ->
           Sanity.query("*") |> Sanity.request(@request_config)
         end
 
       assert exception == %Sanity.Error{
-               source: %Finch.Response{body: "fail!", headers: [], status: 500}
+               source: %Req.Response{body: "fail!", headers: %{}, status: 500}
              }
     end
 
     test "timeout error" do
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+      Mox.expect(MockReq, :request, fn _ ->
         {:error, %Mint.TransportError{reason: :timeout}}
       end)
 
@@ -243,64 +236,13 @@ defmodule SanityTest do
                      Sanity.query("*") |> Sanity.request(@request_config)
                    end
     end
-
-    test "retries and succeeds" do
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
-        {:error, %Mint.TransportError{reason: :timeout}}
-      end)
-
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
-        {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
-      end)
-
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
-        {:ok, %Finch.Response{body: "{}", headers: [], status: 200}}
-      end)
-
-      log =
-        ExUnit.CaptureLog.capture_log([level: :warning], fn ->
-          assert {:ok, %Sanity.Response{body: %{}, headers: [], status: 200}} =
-                   Sanity.query("*")
-                   |> Sanity.request(
-                     Keyword.merge(@request_config, max_attempts: 3, retry_delay: 10)
-                   )
-        end)
-
-      assert log =~
-               ~s'retrying failed request in 10ms: %Mint.TransportError{reason: :timeout}'
-
-      assert log =~
-               ~s'retrying failed request in 20ms: %Finch.Response{'
-    end
-
-    test "retries and fails" do
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
-        {:ok, %Finch.Response{body: "fail!", headers: [], status: 500}}
-      end)
-
-      Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
-        {:error, %Mint.TransportError{reason: :timeout}}
-      end)
-
-      log =
-        ExUnit.CaptureLog.capture_log([level: :warning], fn ->
-          assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
-            Sanity.query("*")
-            |> Sanity.request(Keyword.merge(@request_config, max_attempts: 2, retry_delay: 5))
-          end
-        end)
-
-      assert log =~
-               ~s'retrying failed request in 5ms: %Finch.Response{'
-    end
   end
 
   test "request!" do
-    Mox.expect(MockFinch, :request, fn %Finch.Request{}, Sanity.Finch, _ ->
+    Mox.expect(MockReq, :request, fn _ ->
       {:ok,
-       %Finch.Response{
-         body: "{\"error\":{\"description\":\"The mutation(s) failed...\"}}",
-         headers: [{"content-type", "application/json; charset=utf-8"}],
+       %Req.Response{
+         body: %{"error" => %{"description" => "The mutation(s) failed..."}},
          status: 409
        }}
     end)
@@ -412,14 +354,12 @@ defmodule SanityTest do
     end
 
     test "query, projection, and variables options" do
-      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, request_opts ->
+      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _request_opts ->
         assert query_params == %{
                  "$type" => "\"page\"",
                  "query" =>
                    "*[(_type == $type) && (!(_id in path('drafts.**')))] | order(_id) [0..999] { _id, title }"
                }
-
-        assert request_opts[:max_attempts] == 3
 
         %Response{body: %{"result" => [%{"_id" => "a", "title" => "home"}]}}
       end)
