@@ -28,15 +28,13 @@ defmodule Sanity.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
-      mod: {Sanity.Application, []}
+      extra_applications: [:logger]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:finch, "~> 0.5"},
       {:jason, "~> 1.2"},
       {:nimble_options, "~> 0.5 or ~> 1.0"},
       {:req, "~> 0.4"},

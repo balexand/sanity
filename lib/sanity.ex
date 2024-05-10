@@ -36,12 +36,6 @@ defmodule Sanity do
       doc: "Sanity dataset.",
       required: true
     ],
-    # FIXME
-    finch_mod: [
-      type: :atom,
-      default: Finch,
-      doc: false
-    ],
     http_options: [
       type: :keyword_list,
       default: [receive_timeout: 30_000],
