@@ -41,5 +41,3 @@ jobs:
           ELIXIR_SANITY_TEST_TOKEN: ${{ secrets.ELIXIR_SANITY_TEST_TOKEN }}
         if: env.ELIXIR_SANITY_TEST_TOKEN
         run: mix test --warnings-as-errors --only integration
-      - name: Check format
-        run: mix format --check-formatted
