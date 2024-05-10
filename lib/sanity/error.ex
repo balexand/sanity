@@ -4,7 +4,7 @@ defmodule Sanity.Error do
   the following:
 
     * `%Req.Response{}` - If response with an unsupported HTTP status (like 5xx) is received.
-    * `%Mint.TransportError{}` - If a network error such as a timeout occurred.
+    * `%Mint.TransportError{}` - If a network error such as a timeout occurred. In `req` 0.5 this will change to `%Req.TransportError{}`.
     * `%Sanity.Response{}` - If a 4xx response is received during a call to `Sanity.request!/2`.
   """
 

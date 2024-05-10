@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The `headers` field of the `Sanity.Response` now returns a map instead of a list of tuples. See https://hexdocs.pm/req/changelog.html#change-headers-to-be-maps for details.
   - The `:http_options` option for `Sanity.request/2` is now passed to `Req.request/1` instead of to Finch. The available options will be different.
   - The `:max_attempts` and `:retry_delay` options have been removed from `Sanity.request/2`. `Req` handles retries for us.
-  - The `source` field in the `Sanity.Error` exception may now contain a `Req.Response` struct instead of a `Finch.Response`.
+  - The `source` field in the `Sanity.Error` may contain different values. See [`Sanity.Error`](https://hexdocs.pm/sanity/Sanity.Error.html) for details.
 
 ## [1.3.0] - 2023-07-19
 ### Changed
