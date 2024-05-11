@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for [Perspectives](https://www.sanity.io/blog/introducing-perspectives-sanity-previews) (https://github.com/balexand/sanity/pull/83).
 
 ### Removed
-- (BREAKING) The `:drafts` option has been removed and passing it will result in an error. The `:perspective` option should be used instead. The default behavior is the same so breaking change will only apply if you are explicitly passing the `:drafts` option.
+- (BREAKING) The `:drafts` option has been removed and passing it will result in an error. The `:perspective` option should be used instead. The default behavior is the same so you will only need to update your code if you are explicitly passing the `:drafts` option.
 
 ### Changed
 - (BREAKING) Switch HTTP client from `finch` to `req` (https://github.com/balexand/sanity/pull/81). This introduces the following breaking changes:
