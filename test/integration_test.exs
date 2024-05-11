@@ -221,8 +221,8 @@ defmodule Sanity.MutateIntegrationTest do
       stream =
         File.stream!(
           "test/fixtures/danielle-stein-10OL1q7oX6c-unsplash.jpg",
-          2048,
-          [:raw, :read_ahead, :binary]
+          [:raw, :read_ahead, :binary],
+          2048
         )
 
       assert %Sanity.Response{
