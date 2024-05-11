@@ -378,7 +378,9 @@ defmodule Sanity do
   end
 
   @doc """
-  Generates a request for the [asset endpoint](https://www.sanity.io/docs/http-api-assets).
+  Generates a request for the [asset endpoint](https://www.sanity.io/docs/http-api-assets). The
+  `body` argument can be a binary or iolist to upload content from memory. Or it can be an
+  `Enumerable`, such as a value returned by `File.stream!/2`, for streaming uploads.
 
   ## Options
 
@@ -398,7 +400,8 @@ defmodule Sanity do
     * `creditLine` - The credit to person(s) and/or organization(s) required by the supplier of
       the image to be used when published
   """
-  @spec upload_asset(iodata(), keyword() | map(), keyword() | map()) :: Request.t()
+  @spec upload_asset(iodata() | Enumerable.t(), keyword() | map(), keyword() | map()) ::
+          Request.t()
   def upload_asset(body, opts \\ [], query_params \\ []) do
     opts = NimbleOptions.validate!(opts, @asset_options_schema)
 

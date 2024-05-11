@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Add support for [Perspectives](https://www.sanity.io/blog/introducing-perspectives-sanity-previews) (https://github.com/balexand/sanity/pull/83).
+- Support for [Perspectives](https://www.sanity.io/blog/introducing-perspectives-sanity-previews) (https://github.com/balexand/sanity/pull/83).
+- Support for streaming uploads via `Sanity.upload_asset/3`. This feature came for free with the switch to `Req`.
 
 ### Removed
 - (BREAKING) The `:drafts` option has been removed and passing it will result in an error. The `:perspective` option should be used instead. The default behavior is the same so you will only need to update your code if you are explicitly passing the `:drafts` option.
