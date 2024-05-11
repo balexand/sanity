@@ -258,7 +258,8 @@ defmodule SanityTest do
     test "opts[:drafts] == :exclude (default)" do
       Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
         assert query_params == %{
-                 "query" => "*[(!(_id in path('drafts.**')))] | order(_id) [0..999] { ... }"
+                 "query" => "*[] | order(_id) [0..999] { ... }",
+                 "perspective" => "published"
                }
 
         %Response{body: %{"result" => [%{"_id" => "a"}]}}
@@ -267,38 +268,22 @@ defmodule SanityTest do
       Sanity.stream(request_module: MockSanity, request_opts: @request_config) |> Enum.to_list()
     end
 
-    test "opts[:drafts] == :include" do
+    test "opts[:perspective]" do
       Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
         assert query_params == %{
-                 "query" => "*[] | order(_id) [0..999] { ... }"
+                 "query" => "*[] | order(_id) [0..999] { ... }",
+                 "perspective" => "previewDrafts"
                }
 
         %Response{body: %{"result" => [%{"_id" => "a"}]}}
       end)
 
-      Sanity.stream(drafts: :include, request_module: MockSanity, request_opts: @request_config)
+      Sanity.stream(
+        perspective: "previewDrafts",
+        request_module: MockSanity,
+        request_opts: @request_config
+      )
       |> Enum.to_list()
-    end
-
-    test "opts[:drafts] == :only" do
-      Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
-        assert query_params == %{
-                 "query" => "*[(_id in path('drafts.**'))] | order(_id) [0..999] { ... }"
-               }
-
-        %Response{body: %{"result" => [%{"_id" => "a"}]}}
-      end)
-
-      Sanity.stream(drafts: :only, request_module: MockSanity, request_opts: @request_config)
-      |> Enum.to_list()
-    end
-
-    test "opts[:drafts] == :invalid" do
-      assert_raise NimbleOptions.ValidationError,
-                   "invalid value for :drafts option: expected one of [:exclude, :include, :only], got: :invalid",
-                   fn ->
-                     Sanity.stream(drafts: :invalid, request_opts: @request_config)
-                   end
     end
 
     test "opts[:variables] invalid" do
@@ -318,7 +303,8 @@ defmodule SanityTest do
     test "pagination" do
       Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
         assert query_params == %{
-                 "query" => "*[(!(_id in path('drafts.**')))] | order(_id) [0..4] { ... }"
+                 "query" => "*[] | order(_id) [0..4] { ... }",
+                 "perspective" => "published"
                }
 
         results = Enum.map(1..5, &%{"_id" => "doc-#{&1}"})
@@ -327,8 +313,8 @@ defmodule SanityTest do
 
       Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _ ->
         assert query_params == %{
-                 "query" =>
-                   "*[(!(_id in path('drafts.**'))) && (_id > $pagination_last_id)] | order(_id) [0..4] { ... }",
+                 "query" => "*[(_id > $pagination_last_id)] | order(_id) [0..4] { ... }",
+                 "perspective" => "published",
                  "$pagination_last_id" => "\"doc-5\""
                }
 
@@ -357,8 +343,8 @@ defmodule SanityTest do
       Mox.expect(MockSanity, :request!, fn %Request{query_params: query_params}, _request_opts ->
         assert query_params == %{
                  "$type" => "\"page\"",
-                 "query" =>
-                   "*[(_type == $type) && (!(_id in path('drafts.**')))] | order(_id) [0..999] { _id, title }"
+                 "query" => "*[(_type == $type)] | order(_id) [0..999] { _id, title }",
+                 "perspective" => "published"
                }
 
         %Response{body: %{"result" => [%{"_id" => "a", "title" => "home"}]}}

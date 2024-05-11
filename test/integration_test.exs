@@ -127,26 +127,73 @@ defmodule Sanity.MutateIntegrationTest do
              |> Sanity.request(Keyword.put(config, :cdn, true))
   end
 
-  test "stream", %{config: config} do
-    type = "streamItem#{:rand.uniform(1_000_000)}"
+  describe "stream" do
+    test "with multiple batches", %{config: config} do
+      type = "streamItem#{:rand.uniform(1_000_000)}"
 
-    Sanity.mutate(Enum.map(1..5, &%{create: %{_type: type, title: "item #{&1}"}}))
-    |> Sanity.request(config)
+      Sanity.mutate(Enum.map(1..5, &%{create: %{_type: type, title: "item #{&1}"}}))
+      |> Sanity.request!(config)
 
-    assert [
-             %{"title" => "item 1"},
-             %{"title" => "item 2"},
-             %{"title" => "item 3"},
-             %{"title" => "item 4"},
-             %{"title" => "item 5"}
-           ] =
-             Sanity.stream(query: "_type == '#{type}'", batch_size: 2, request_opts: config)
-             |> Enum.to_list()
-             |> Enum.sort_by(& &1["title"])
+      Sanity.mutate([
+        %{create: %{_id: "drafts.a-#{:rand.uniform(1_000_000)}", _type: type, title: "my draft"}}
+      ])
+      |> Sanity.request!(config)
+
+      assert [
+               %{"title" => "item 1"},
+               %{"title" => "item 2"},
+               %{"title" => "item 3"},
+               %{"title" => "item 4"},
+               %{"title" => "item 5"}
+             ] =
+               Sanity.stream(query: "_type == '#{type}'", batch_size: 2, request_opts: config)
+               |> Enum.to_list()
+               |> Enum.sort_by(& &1["title"])
+    end
+
+    test "with perspectives", %{config: config} do
+      type = "streamItem#{:rand.uniform(1_000_000)}"
+      id = "my-id-#{:rand.uniform(1_000_000)}"
+
+      Sanity.mutate([
+        %{create: %{_id: id, _type: type, title: "published item"}},
+        %{create: %{_id: "drafts.#{id}", _type: type, title: "draft item"}}
+      ])
+      |> Sanity.request!(config)
+
+      # Published (default)
+      assert [%{"_id" => ^id, "title" => "published item"}] =
+               Sanity.stream(
+                 query: "_type == '#{type}'",
+                 request_opts: config
+               )
+               |> Enum.to_list()
+
+      # Preview drafts
+      assert [%{"_id" => ^id, "title" => "draft item"}] =
+               Sanity.stream(
+                 query: "_type == '#{type}'",
+                 perspective: "previewDrafts",
+                 request_opts: config
+               )
+               |> Enum.to_list()
+
+      # Raw
+      assert [
+               %{"_id" => "drafts." <> ^id, "title" => "draft item"},
+               %{"_id" => ^id, "title" => "published item"}
+             ] =
+               Sanity.stream(
+                 query: "_type == '#{type}'",
+                 perspective: "raw",
+                 request_opts: config
+               )
+               |> Enum.to_list()
+    end
   end
 
   test "timeout error", %{config: config} do
-    config = Keyword.put(config, :http_options, receive_timeout: 0, retry_log_level: false)
+    config = Keyword.put(config, :http_options, receive_timeout: 0, retry: false)
 
     assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
       Sanity.query(~S<{"hello": "world"}>)
