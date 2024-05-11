@@ -131,7 +131,12 @@ defmodule Sanity.MutateIntegrationTest do
     type = "streamItem#{:rand.uniform(1_000_000)}"
 
     Sanity.mutate(Enum.map(1..5, &%{create: %{_type: type, title: "item #{&1}"}}))
-    |> Sanity.request(config)
+    |> Sanity.request!(config)
+
+    Sanity.mutate([
+      %{create: %{_id: "drafts.a-#{:rand.uniform(1_000_000)}", _type: type, title: "my draft"}}
+    ])
+    |> Sanity.request!(config)
 
     assert [
              %{"title" => "item 1"},
@@ -143,10 +148,28 @@ defmodule Sanity.MutateIntegrationTest do
              Sanity.stream(query: "_type == '#{type}'", batch_size: 2, request_opts: config)
              |> Enum.to_list()
              |> Enum.sort_by(& &1["title"])
+
+    # Only draft documents
+    assert [%{"title" => "my draft"}] =
+             Sanity.stream(query: "_type == '#{type}'", drafts: :only, request_opts: config)
+             |> Enum.to_list()
+
+    # Include both drafts and published documents
+    assert [
+             %{"title" => "my draft"},
+             %{"title" => "item 1"},
+             %{"title" => "item 2"},
+             %{"title" => "item 3"},
+             %{"title" => "item 4"},
+             %{"title" => "item 5"}
+           ] =
+             Sanity.stream(query: "_type == '#{type}'", drafts: :include, request_opts: config)
+             |> Enum.to_list()
+             |> Enum.sort_by(& &1["title"])
   end
 
   test "timeout error", %{config: config} do
-    config = Keyword.put(config, :http_options, receive_timeout: 0, retry_log_level: false)
+    config = Keyword.put(config, :http_options, receive_timeout: 0, retry: false)
 
     assert_raise Sanity.Error, "%Mint.TransportError{reason: :timeout}", fn ->
       Sanity.query(~S<{"hello": "world"}>)
