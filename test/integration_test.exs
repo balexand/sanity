@@ -192,6 +192,49 @@ defmodule Sanity.MutateIntegrationTest do
     end
   end
 
+  describe "upload_asset" do
+    test "binary jpg asset", %{config: config} do
+      binary = File.read!("test/fixtures/danielle-stein-10OL1q7oX6c-unsplash.jpg")
+
+      assert %Sanity.Response{
+               body: %{
+                 "document" => %{
+                   "_type" => "sanity.imageAsset",
+                   "metadata" => %{
+                     "dimensions" => %{
+                       "_type" => "sanity.imageDimensions",
+                       "height" => 960,
+                       "width" => 640
+                     }
+                   },
+                   "mimeType" => "image/jpeg",
+                   "sha1hash" => "41de39c94c974305bdda7d901cfca3102a8e6e77",
+                   "size" => 169_633
+                 }
+               }
+             } =
+               Sanity.upload_asset(binary)
+               |> Sanity.request!(config)
+    end
+
+    test "stream jpg asset", %{config: config} do
+      stream = File.stream!("test/fixtures/danielle-stein-10OL1q7oX6c-unsplash.jpg", 2048)
+
+      assert %Sanity.Response{
+               body: %{
+                 "document" => %{
+                   "_type" => "sanity.imageAsset",
+                   "mimeType" => "image/jpeg",
+                   "sha1hash" => "41de39c94c974305bdda7d901cfca3102a8e6e77",
+                   "size" => 169_633
+                 }
+               }
+             } =
+               Sanity.upload_asset(stream)
+               |> Sanity.request!(config)
+    end
+  end
+
   test "timeout error", %{config: config} do
     config = Keyword.put(config, :http_options, receive_timeout: 0, retry: false)
 
