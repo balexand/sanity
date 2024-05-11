@@ -136,6 +136,10 @@ defmodule Sanity do
   Generates a request to the [Query](https://www.sanity.io/docs/http-query) endpoint. Requests to
   this endpoint may be authenticated or unauthenticated. Unauthenticated requests to a dataset
   with private visibility will succeed but will not return any documents.
+
+  [Perspectives](https://www.sanity.io/docs/perspectives) can be used by passing the `"perspective"`
+  query param like, `Sanity.query("*", %{}, perspective: "previewDrafts")`. This function does not
+  set a perspective by default, which is equivalent to a perspective of `"raw"`.
   """
   @spec query(String.t(), keyword() | map(), keyword() | map()) :: Request.t()
   def query(query, variables \\ %{}, query_params \\ []) do
