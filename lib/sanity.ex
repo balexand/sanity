@@ -281,11 +281,11 @@ defmodule Sanity do
       doc:
         ~S'Number of results to fetch per request. The Sanity docs say: "In the general case, we recommend a batch size of no more than 5,000. If your documents are very large, a smaller batch size is better."'
     ],
-    drafts: [
-      type: {:in, [:exclude, :include, :only]},
-      default: :exclude,
+    perspective: [
+      type: :string,
+      default: "published",
       doc:
-        "Use `:exclude` to exclude drafts, `:include` to include drafts along with published docs, or `:only` to fetch drafts and not published documents."
+        ~S'Perspective to use. Common values are `"published"`, `"previewDrafts"`, and `"raw"`. See the [docs](https://www.sanity.io/docs/perspectives) for details.'
     ],
     projection: [
       type: :string,
@@ -355,14 +355,14 @@ defmodule Sanity do
 
   defp stream_page(opts, page_query) do
     query =
-      [opts[:query], drafts_query(opts[:drafts]), page_query]
+      [opts[:query], page_query]
       |> Enum.filter(& &1)
       |> Enum.map(&"(#{&1})")
       |> Enum.join(" && ")
 
     results =
       "*[#{query}] | order(_id) [0..#{opts[:batch_size] - 1}] #{opts[:projection]}"
-      |> query(opts[:variables])
+      |> query(opts[:variables], perspective: opts[:perspective])
       |> opts[:request_module].request!(opts[:request_opts])
       |> result!()
 
@@ -372,10 +372,6 @@ defmodule Sanity do
       {results, results |> List.last() |> Map.fetch!("_id")}
     end
   end
-
-  defp drafts_query(:exclude), do: "!(_id in path('drafts.**'))"
-  defp drafts_query(:include), do: nil
-  defp drafts_query(:only), do: "_id in path('drafts.**')"
 
   @doc """
   Generates a request for the [asset endpoint](https://www.sanity.io/docs/http-api-assets).
