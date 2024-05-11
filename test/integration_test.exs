@@ -218,12 +218,14 @@ defmodule Sanity.MutateIntegrationTest do
     end
 
     test "stream jpg asset", %{config: config} do
+      path = "test/fixtures/danielle-stein-10OL1q7oX6c-unsplash.jpg"
+
       stream =
-        File.stream!(
-          "test/fixtures/danielle-stein-10OL1q7oX6c-unsplash.jpg",
-          [:raw, :read_ahead, :binary],
-          2048
-        )
+        if System.version() |> String.split(".") |> Enum.map(&String.to_integer/1) >= [1, 16, 0] do
+          File.stream!(path, 2048)
+        else
+          File.stream!(path, [:raw, :read_ahead, :binary], 2048)
+        end
 
       assert %Sanity.Response{
                body: %{
