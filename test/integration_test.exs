@@ -156,12 +156,12 @@ defmodule Sanity.MutateIntegrationTest do
 
     # Include both drafts and published documents
     assert [
-             %{"title" => "my draft"},
              %{"title" => "item 1"},
              %{"title" => "item 2"},
              %{"title" => "item 3"},
              %{"title" => "item 4"},
-             %{"title" => "item 5"}
+             %{"title" => "item 5"},
+             %{"title" => "my draft"}
            ] =
              Sanity.stream(query: "_type == '#{type}'", drafts: :include, request_opts: config)
              |> Enum.to_list()
