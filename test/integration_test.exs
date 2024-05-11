@@ -218,7 +218,8 @@ defmodule Sanity.MutateIntegrationTest do
     end
 
     test "stream jpg asset", %{config: config} do
-      stream = File.stream!("test/fixtures/danielle-stein-10OL1q7oX6c-unsplash.jpg", 2048)
+      stream =
+        File.stream!("test/fixtures/danielle-stein-10OL1q7oX6c-unsplash.jpg", 2048, [])
 
       assert %Sanity.Response{
                body: %{
