@@ -18,11 +18,11 @@ defmodule Sanity.MutateIntegrationTest do
 
     Sanity.mutate([
       %{delete: %{query: ~S'*[
-          _type in ["sanity.imageAsset", "product"] &&
+          !(string::startsWith(_type, "system.")) &&
           dateTime(now()) - dateTime(_createdAt) > 60
         ]'}}
     ])
-    |> Sanity.request(config)
+    |> Sanity.request!(config)
 
     %{config: config}
   end
