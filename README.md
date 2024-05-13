@@ -19,8 +19,21 @@ end
 ## Examples
 
 ```elixir
-Sanity.query(~S'*[_type == "product"]')
-|> Sanity.request(project_id: "abc", dataset: "production")
+request_opts = [project_id: "abc", dataset: "production", token: "secret"]
+```
+
+Request all published pages using [`Sanity.query/3`](https://hexdocs.pm/sanity/Sanity.html#query/3):
+
+```elixir
+Sanity.query(~S'*[_type == "page"]', %{}, perspective: "published")
+|> Sanity.request!(request_opts)
+```
+
+Make the same request using pagination with [`Sanity.stream/1`](https://hexdocs.pm/sanity/Sanity.html#stream/1):
+
+```elixir
+Sanity.stream(query: ~S'_type == "page"', request_opts: request_opts)
+|> Enum.to_list()
 ```
 
 ## Related Projects
