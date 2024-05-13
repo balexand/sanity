@@ -29,7 +29,7 @@ Sanity.query(~S'*[_type == "page"]', %{}, perspective: "published")
 |> Sanity.request!(request_opts)
 ```
 
-Make the same request using pagination with [`Sanity.stream/1`](https://hexdocs.pm/sanity/Sanity.html#stream/1):
+Make the same request with [`Sanity.stream/1`](https://hexdocs.pm/sanity/Sanity.html#stream/1):
 
 ```elixir
 Sanity.stream(query: ~S'_type == "page"', request_opts: request_opts)
