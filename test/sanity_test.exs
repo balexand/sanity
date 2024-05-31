@@ -216,7 +216,7 @@ defmodule SanityTest do
       end)
 
       exception =
-        assert_raise Sanity.Error, ~r'#Req.Response<', fn ->
+        assert_raise Sanity.Error, ~r'%Req.Response{', fn ->
           Sanity.query("*") |> Sanity.request(@request_config)
         end
 
